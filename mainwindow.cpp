@@ -8,7 +8,6 @@
 #include<set>
 #include <QSet>
 #include<QPair>
-
 #include <QImage>
 #include <QColor>
 #include <QPoint>
@@ -24,11 +23,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->workArea->installEventFilter(this);
 
     QPixmap canvas = ui->workArea->pixmap(Qt::ReturnByValue);
-    if (canvas.isNull()) {
-        canvas = QPixmap(ui->workArea->size());
-        canvas.fill(Qt::white);
-        ui->workArea->setPixmap(canvas);
-    }
+    // if (canvas.isNull()) {
+    //     canvas = QPixmap(ui->workArea->size());
+    //     canvas.fill(Qt::white);
+    //     ui->workArea->setPixmap(canvas);
+    // }
+    canvas = QPixmap(ui->workArea->size());
+    canvas.fill(Qt::white);
+    ui->workArea->setPixmap(canvas);
 }
 
 MainWindow::~MainWindow()
@@ -49,6 +51,9 @@ void MainWindow::colorPoint(int x, int y, int r, int g, int b, int penwidth=1) {
     painter.setPen(pen);
     painter.drawPoint(x, y);
     ui->workArea->setPixmap(canvas);
+    QPoint pt = reverse_point_transform(x,y);
+    //qDebug()<<"Point Coloured: "<<pt.x()<<"  "<<pt.y();
+    colorMap[{pt.x(),pt.y()}] = QColor(r,g,b);
 }
 
 void MainWindow::on_showAxis_clicked() {
@@ -69,34 +74,39 @@ void MainWindow::on_showAxis_clicked() {
     }
 }
 
+void MainWindow::draw_gridlines(int unitDistance){
+    int width = ui->workArea->width();
+    int height = ui->workArea->height();
+    if (unitDistance <= 0) return; // Prevent invalid grid offset
+
+    int centerX=width/2;
+    int centerY=height/2;
+    QPixmap canvas=ui->workArea->pixmap();
+    QPainter painter(&canvas);
+    for(int i =  unitDistance; (centerX+i<width && centerX-i>0) || (centerY+i<height && centerY-i>0); i+= unitDistance)
+    {
+        QPoint qp1 = QPoint(centerX + i, 0);
+        QPoint qp2 = QPoint(centerX + i, height);
+        QPoint qp3 = QPoint(centerX - i, 0);
+        QPoint qp4 = QPoint(centerX - i, height);
+
+        QPoint qp5 = QPoint(0, centerY + i);
+        QPoint qp6 = QPoint(width, centerY + i);
+        QPoint qp7 = QPoint(0, centerY-i);
+        QPoint qp8 = QPoint(width, centerY - i);
+        painter.drawLine(qp1, qp2);
+        painter.drawLine(qp3, qp4);
+        painter.drawLine(qp5, qp6);
+        painter.drawLine(qp7, qp8);
+    }
+
+    ui->workArea->setPixmap(canvas);
+}
+
 void MainWindow::on_gridlines_clicked() {
     int gridOffset = ui->gridOffset->value();
-        int width = ui->workArea->width();
-        int height = ui->workArea->height();
-        if (gridOffset <= 0) return; // Prevent invalid grid offset
-
-        int centerX=width/2;
-        int centerY=height/2;
-        QPixmap canvas=ui->workArea->pixmap();
-        QPainter painter(&canvas);
-        for(int i =  gridOffset; (centerX+i<width && centerX-i>0) || (centerY+i<height && centerY-i>0); i+= gridOffset)
-        {
-            QPoint qp1 = QPoint(centerX + i, 0);
-            QPoint qp2 = QPoint(centerX + i, height);
-            QPoint qp3 = QPoint(centerX - i, 0);
-            QPoint qp4 = QPoint(centerX - i, height);
-
-            QPoint qp5 = QPoint(0, centerY + i);
-            QPoint qp6 = QPoint(width, centerY + i);
-            QPoint qp7 = QPoint(0, centerY-i);
-            QPoint qp8 = QPoint(width, centerY - i);
-            painter.drawLine(qp1, qp2);
-            painter.drawLine(qp3, qp4);
-            painter.drawLine(qp5, qp6);
-            painter.drawLine(qp7, qp8);
-        }
-
-        ui->workArea->setPixmap(canvas);
+    unitDistance = gridOffset;
+    draw_gridlines(unitDistance);
 }
 
 
@@ -106,13 +116,13 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         QMouseEvent *cursor = static_cast<QMouseEvent*>(event);
         int x = cursor->pos().x();
         int y = cursor->pos().y();
-        int gridOffset = (ui->gridOffset->value()==0)?1:ui->gridOffset->value();
+        //int unitDistance = (ui->unitDistance->value()==0)?1:ui->unitDistance->value();
         int width = ui->workArea->width();
         int height = ui->workArea->height();
         int centerX=width/2;
         int centerY=height/2;
-        ui->x_coordinate->setText(QString::number(floor((x-centerX)*1.0/gridOffset)));
-        ui->y_coordinate->setText(QString::number(floor((centerY-y)*1.0/gridOffset)));
+        ui->x_coordinate->setText(QString::number(floor((x-centerX)*1.0/unitDistance)));
+        ui->y_coordinate->setText(QString::number(floor((centerY-y)*1.0/unitDistance)));
         return true; // Event handled
     }
     if(watched == ui->workArea && event->type() == QEvent::MouseButtonPress)
@@ -120,20 +130,21 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         QMouseEvent *cursor = static_cast<QMouseEvent*>(event);
         int x = cursor->pos().x();
         int y = cursor->pos().y();
-        int gridOffset = (ui->gridOffset->value()==0)?1:ui->gridOffset->value();
+        //int unitDistance = (ui->unitDistance->value()==0)?1:ui->unitDistance->value();
         int width = ui->workArea->width();
         int height = ui->workArea->height();
         int centerX=width/2;
         int centerY=height/2;
         clickedPoint.setX(x);
         clickedPoint.setY(y);
-        int X = floor((x-centerX)*1.0/gridOffset);
-        int Y = floor((centerY-y)*1.0/gridOffset);
+        int X = floor((x-centerX)*1.0/unitDistance);
+        int Y = floor((centerY-y)*1.0/unitDistance);
+        qDebug()<<"Point Clicked: "<<X<<" "<<Y;
         points.push_back({X, Y});
-        int calcX = centerX+ X*gridOffset + gridOffset/2;
-        int calcY = centerY -  Y*gridOffset - gridOffset/2;
+        int calcX = centerX+ X*unitDistance + unitDistance/2;
+        int calcY = centerY -  Y*unitDistance - unitDistance/2;
         // points.push_back({calcX, calcY});
-        colorPoint(calcX, calcY, 255,255,0, gridOffset);
+        colorPoint(calcX, calcY, 255,255,0, unitDistance);
 
     }
     return QMainWindow::eventFilter(watched, event);
@@ -172,7 +183,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
 void MainWindow::on_reset_clicked()
 {
-    ui->workArea->setPixmap(temp);
+    clear_screen();
     points.clear();
 }
 
@@ -194,20 +205,20 @@ void MainWindow::draw_dda_line(float x1, float y1, float x2, float y2)
     xinc = dx / steps;  // Increment in x
     yinc = dy / steps;  // Increment in y
 
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
     int width = ui->workArea->width();
     int height = ui->workArea->height();
     int centerX = width / 2;
     int centerY = height / 2;
 
-    float x_float = centerX + x1 * gridOffset + gridOffset / 2.0;
-    float y_float = centerY - y1 * gridOffset - gridOffset / 2.0;
+    float x_float = centerX + x1 * unitDistance + unitDistance / 2.0;
+    float y_float = centerY - y1 * unitDistance - unitDistance / 2.0;
 
     int xn = static_cast<int>(x_float);  // Initial x position in the grid
     int yn = static_cast<int>(y_float);  // Initial y position in the grid
 
     qDebug() << xn << yn;  // Print the x, y values for debugging
-    //colorPoint(xn, yn, 255, 0, 255, gridOffset);  // Color the initial point
+    //colorPoint(xn, yn, 255, 0, 255, unitDistance);  // Color the initial point
     //--------------------------------------------------------------------------------
 
     QVector<QPoint> pts;
@@ -218,8 +229,8 @@ void MainWindow::draw_dda_line(float x1, float y1, float x2, float y2)
     int cnt=0;
     for (int i = 0; i < steps; i++)  // Loop to complete the straight line
     {
-        x_float += xinc * gridOffset;
-        y_float -= yinc * gridOffset;
+        x_float += xinc * unitDistance;
+        y_float -= yinc * unitDistance;
 
         int x_new = static_cast<int>(x_float);  // New x position in the grid
         int y_new = static_cast<int>(y_float);  // New y position in the grid
@@ -228,12 +239,12 @@ void MainWindow::draw_dda_line(float x1, float y1, float x2, float y2)
         {
             xn = x_new;
             yn = y_new;
-            int X = floor((xn-centerX)*1.0/gridOffset);
-            int Y = floor((centerY-yn)*1.0/gridOffset);
-            int calcX = centerX+ X*gridOffset + gridOffset/2;
-            int calcY = centerY -  Y*gridOffset - gridOffset/2;
+            int X = floor((xn-centerX)*1.0/unitDistance);
+            int Y = floor((centerY-yn)*1.0/unitDistance);
+            int calcX = centerX+ X*unitDistance + unitDistance/2;
+            int calcY = centerY -  Y*unitDistance - unitDistance/2;
             pts.push_back(QPoint(calcX, calcY));
-            // colorPoint(calcX, calcY, 0, 255, 0, gridOffset);  // Color the new point
+            // colorPoint(calcX, calcY, 0, 255, 0, unitDistance);  // Color the new point
         }
         cnt++;
         /*qDebug() << x_new << y_new;*/  // Print the updated x, y values for debugging
@@ -244,7 +255,7 @@ void MainWindow::draw_dda_line(float x1, float y1, float x2, float y2)
 
     for(auto x: pts)
     {
-        colorPoint(x.x(), x.y(), 255, 153, 51, gridOffset);
+        colorPoint(x.x(), x.y(), 255, 153, 51, unitDistance);
     }
 }
 
@@ -265,7 +276,7 @@ void MainWindow::draw_bresenham_line(int x1, int y1, int x2, int y2) {
     int sy = (y1 < y2) ? 1 : -1;
     int err = dx - dy;
 
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
     int width = ui->workArea->width();
     int height = ui->workArea->height();
     int centerX = width / 2;
@@ -277,8 +288,8 @@ void MainWindow::draw_bresenham_line(int x1, int y1, int x2, int y2) {
 
     int cnt=0;
     while (true) {
-        int calcX = centerX + x1 * gridOffset + gridOffset / 2;
-        int calcY = centerY - y1 * gridOffset - gridOffset / 2;
+        int calcX = centerX + x1 * unitDistance + unitDistance / 2;
+        int calcY = centerY - y1 * unitDistance - unitDistance / 2;
         pts.push_back(QPoint(calcX, calcY));
         polygon.insert(QPoint(calcX,calcY));
 
@@ -299,7 +310,7 @@ void MainWindow::draw_bresenham_line(int x1, int y1, int x2, int y2) {
     ui->Bresenham_Time->setText(QString("Time Taken: ") + QString::number(elapsedTime) + QString(" ns"));
 
     for (auto &pt : pts) {
-        colorPoint(pt.x(), pt.y(), 153, 255, 153, gridOffset);
+        colorPoint(pt.x(), pt.y(), 153, 255, 153, unitDistance);
     }
 }
 
@@ -318,17 +329,17 @@ void MainWindow::on_pushButton_2_clicked()
 void MainWindow::draw_polar_circle(int xc,int yc){
 
 
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
     int width = ui->workArea->width();
     int height = ui->workArea->height();
     int centerX = width / 2;
     int centerY = height / 2;
 
-    float x_float = centerX + xc * gridOffset + gridOffset / 2.0;
-    float y_float = centerY - yc * gridOffset - gridOffset / 2.0;
+    float x_float = centerX + xc * unitDistance + unitDistance / 2.0;
+    float y_float = centerY - yc * unitDistance - unitDistance / 2.0;
 
 
-    float r = (ui->Radius->value())*gridOffset;
+    float r = (ui->Radius->value())*unitDistance;
 
     QVector<QPoint> pts;
     QElapsedTimer timer;
@@ -338,10 +349,10 @@ void MainWindow::draw_polar_circle(int xc,int yc){
         int x = static_cast<int>(x_float+(r * cos(radian)));
         int y = static_cast<int>(y_float+(r * sin(radian)));
 
-        int X = floor((x-centerX)*1.0/gridOffset);
-        int Y = floor((centerY-y)*1.0/gridOffset);
-        int calcX = centerX+ X*gridOffset + gridOffset/2;
-        int calcY = centerY -  Y*gridOffset - gridOffset/2;
+        int X = floor((x-centerX)*1.0/unitDistance);
+        int Y = floor((centerY-y)*1.0/unitDistance);
+        int calcX = centerX+ X*unitDistance + unitDistance/2;
+        int calcY = centerY -  Y*unitDistance - unitDistance/2;
         pts.push_back(QPoint(calcX, calcY));
 
 
@@ -354,13 +365,13 @@ void MainWindow::draw_polar_circle(int xc,int yc){
 
     for(auto &pt:pts){
         qDebug()<<pt.x()<<" "<<pt.y();
-        colorPoint(pt.x(), pt.y(), 102, 0, 204, gridOffset);
+        colorPoint(pt.x(), pt.y(), 102, 0, 204, unitDistance);
         delay(1);
     }
 }
 
 void MainWindow::EightPtSym(QVector<QPoint> &pts,float x_float,float y_float,int x,int y){
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
     int width = ui->workArea->width();
     int height = ui->workArea->height();
     int centerX = width / 2;
@@ -374,26 +385,26 @@ void MainWindow::EightPtSym(QVector<QPoint> &pts,float x_float,float y_float,int
     for(int i=0;i<8;++i){
         int xn = static_cast<int>(x_float+dx[i]);
         int yn = static_cast<int>(y_float+dy[i]);
-        int X = floor((xn-centerX)*1.0/gridOffset);
-        int Y = floor((centerY-yn)*1.0/gridOffset);
-        int calcX = centerX+ X*gridOffset + gridOffset/2;
-        int calcY = centerY -  Y*gridOffset - gridOffset/2;
+        int X = floor((xn-centerX)*1.0/unitDistance);
+        int Y = floor((centerY-yn)*1.0/unitDistance);
+        int calcX = centerX+ X*unitDistance + unitDistance/2;
+        int calcY = centerY -  Y*unitDistance - unitDistance/2;
         pts.push_back(QPoint(calcX, calcY));
     }
 }
 
 
 void MainWindow::draw_circle_bresenham(int xc,int yc){
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    ///int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
     int width = ui->workArea->width();
     int height = ui->workArea->height();
     int centerX = width / 2;
     int centerY = height / 2;
 
-    float x_float = centerX + xc * gridOffset + gridOffset / 2.0;
-    float y_float = centerY - yc * gridOffset - gridOffset / 2.0;
+    float x_float = centerX + xc * unitDistance + unitDistance / 2.0;
+    float y_float = centerY - yc * unitDistance - unitDistance / 2.0;
 
-    float r = (ui->Radius->value())*gridOffset;
+    float r = (ui->Radius->value())*unitDistance;
     QVector<QPoint> pts;
 
     int x = 0;
@@ -419,7 +430,7 @@ void MainWindow::draw_circle_bresenham(int xc,int yc){
 
     for(auto &pt:pts){
         qDebug()<<pt.x()<<" "<<pt.y();
-        colorPoint(pt.x(), pt.y(), 255, 51, 51, gridOffset);
+        colorPoint(pt.x(), pt.y(), 255, 51, 51, unitDistance);
         delay(1);
     }
 }
@@ -453,7 +464,7 @@ void MainWindow::on_GenCartCircle_clicked()
     int gy = points[n-1].y();
 
 
-    int offset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    int offset = unitDistance;
     int w = ui->workArea->width();
     int h = ui->workArea->height();
     int cx = w / 2;
@@ -467,7 +478,7 @@ void MainWindow::on_GenCartCircle_clicked()
     for (double x = 0; x <= r; x++) {
         int y = static_cast<int>(sqrt(r * r - x * x));
         qDebug()<<x<<" "<<y;
-        drawCirclePoints(x, y, px, py, 255, 0, 255, offset);
+        drawCirclePoints(x, y, px, py, 255, 0, 255, unitDistance);
     }
 
     // qint64 timeMs = t.elapsed();
@@ -477,46 +488,46 @@ void MainWindow::on_GenCartCircle_clicked()
 
 }
 
-void MainWindow::drawCirclePoints(int x, int y, int pixelCenterX, int pixelCenterY, int r, int g, int b, int gridOffset) {
-    colorPoint(pixelCenterX + x * gridOffset, pixelCenterY - y * gridOffset, r, g, b, gridOffset);
+void MainWindow::drawCirclePoints(int x, int y, int pixelCenterX, int pixelCenterY, int r, int g, int b, int unitDistance) {
+    colorPoint(pixelCenterX + x * unitDistance, pixelCenterY - y * unitDistance, r, g, b, unitDistance);
     Delay;
-    colorPoint(pixelCenterX - x * gridOffset, pixelCenterY - y * gridOffset, r, g, b, gridOffset);
+    colorPoint(pixelCenterX - x * unitDistance, pixelCenterY - y * unitDistance, r, g, b, unitDistance);
     Delay;
-    colorPoint(pixelCenterX + x * gridOffset, pixelCenterY + y * gridOffset, r, g, b, gridOffset);
+    colorPoint(pixelCenterX + x * unitDistance, pixelCenterY + y * unitDistance, r, g, b, unitDistance);
     Delay;
-    colorPoint(pixelCenterX - x * gridOffset, pixelCenterY + y * gridOffset, r, g, b, gridOffset);
+    colorPoint(pixelCenterX - x * unitDistance, pixelCenterY + y * unitDistance, r, g, b, unitDistance);
     Delay;
-    colorPoint(pixelCenterX + y * gridOffset, pixelCenterY - x * gridOffset, r, g, b, gridOffset);
+    colorPoint(pixelCenterX + y * unitDistance, pixelCenterY - x * unitDistance, r, g, b, unitDistance);
     Delay;
-    colorPoint(pixelCenterX - y * gridOffset, pixelCenterY - x * gridOffset, r, g, b, gridOffset);
+    colorPoint(pixelCenterX - y * unitDistance, pixelCenterY - x * unitDistance, r, g, b, unitDistance);
     Delay;
-    colorPoint(pixelCenterX + y * gridOffset, pixelCenterY + x * gridOffset, r, g, b, gridOffset);
+    colorPoint(pixelCenterX + y * unitDistance, pixelCenterY + x * unitDistance, r, g, b, unitDistance);
     Delay;
-    colorPoint(pixelCenterX - y * gridOffset, pixelCenterY + x * gridOffset, r, g, b, gridOffset);
+    colorPoint(pixelCenterX - y * unitDistance, pixelCenterY + x * unitDistance, r, g, b, unitDistance);
     Delay;
 }
 
 
 void MainWindow::draw_polar_ellipse(QPoint f1, QPoint f2) {
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
     int width = ui->workArea->width();
     int height = ui->workArea->height();
     int centerX = width / 2;
     int centerY = height / 2;
 
     // Convert focus points to pixel coordinates
-    float x1 = centerX + f1.x() * gridOffset + gridOffset / 2.0;
-    float y1 = centerY - f1.y() * gridOffset - gridOffset / 2.0;
-    float x2 = centerX + f2.x() * gridOffset + gridOffset / 2.0;
-    float y2 = centerY - f2.y() * gridOffset - gridOffset / 2.0;
+    float x1 = centerX + f1.x() * unitDistance + unitDistance / 2.0;
+    float y1 = centerY - f1.y() * unitDistance - unitDistance / 2.0;
+    float x2 = centerX + f2.x() * unitDistance + unitDistance / 2.0;
+    float y2 = centerY - f2.y() * unitDistance - unitDistance / 2.0;
 
     // Calculate the center of the ellipse as the midpoint of the two foci
     float xc = (x1 + x2) / 2.0;
     float yc = (y1 + y2) / 2.0;
 
     // Fixed semi-major and semi-minor axes
-    float a = ui->major->value()*gridOffset;
-    float b = ui->minor->value()*gridOffset;
+    float a = ui->major->value()*unitDistance;
+    float b = ui->minor->value()*unitDistance;
 
     QVector<QPoint> pts;
     QElapsedTimer timer;
@@ -528,10 +539,10 @@ void MainWindow::draw_polar_ellipse(QPoint f1, QPoint f2) {
         int x = static_cast<int>(xc + a * cos(radian));
         int y = static_cast<int>(yc + b * sin(radian));
 
-        int gridX = floor((x - centerX) * 1.0 / gridOffset);
-        int gridY = floor((centerY - y) * 1.0 / gridOffset);
-        int calcX = centerX + gridX * gridOffset + gridOffset / 2;
-        int calcY = centerY - gridY * gridOffset - gridOffset / 2;
+        int gridX = floor((x - centerX) * 1.0 / unitDistance);
+        int gridY = floor((centerY - y) * 1.0 / unitDistance);
+        int calcX = centerX + gridX * unitDistance + unitDistance / 2;
+        int calcY = centerY - gridY * unitDistance - unitDistance / 2;
         pts.push_back(QPoint(calcX, calcY));
     }
 
@@ -541,7 +552,7 @@ void MainWindow::draw_polar_ellipse(QPoint f1, QPoint f2) {
     // Draw each calculated point
     for (auto &pt : pts) {
         qDebug() << pt.x() << " " << pt.y();
-        colorPoint(pt.x(), pt.y(), 102, 0, 204, gridOffset);
+        colorPoint(pt.x(), pt.y(), 102, 0, 204, unitDistance);
         delay(1); // Optional delay for visualization
     }
 }
@@ -555,15 +566,15 @@ void MainWindow::on_PolarEllipse_clicked()
     draw_polar_ellipse(points[n-1],points[n-2]);
 }
 
-void MainWindow::drawEllipsePoints(int x, int y, int pixelCenterX, int pixelCenterY, int r, int g, int b, int gridOffset) {
+void MainWindow::drawEllipsePoints(int x, int y, int pixelCenterX, int pixelCenterY, int r, int g, int b, int unitDistance) {
     // Draw points using 4-point symmetry
-    colorPoint(pixelCenterX + x * gridOffset, pixelCenterY - y * gridOffset, r, g, b, gridOffset); // Quadrant 1
+    colorPoint(pixelCenterX + x * unitDistance, pixelCenterY - y * unitDistance, r, g, b, unitDistance); // Quadrant 1
     Delay;
-    colorPoint(pixelCenterX - x * gridOffset, pixelCenterY - y * gridOffset, r, g, b, gridOffset); // Quadrant 2
+    colorPoint(pixelCenterX - x * unitDistance, pixelCenterY - y * unitDistance, r, g, b, unitDistance); // Quadrant 2
     Delay;
-    colorPoint(pixelCenterX + x * gridOffset, pixelCenterY + y * gridOffset, r, g, b, gridOffset); // Quadrant 3
+    colorPoint(pixelCenterX + x * unitDistance, pixelCenterY + y * unitDistance, r, g, b, unitDistance); // Quadrant 3
     Delay;
-    colorPoint(pixelCenterX - x * gridOffset, pixelCenterY + y * gridOffset, r, g, b, gridOffset); // Quadrant 4
+    colorPoint(pixelCenterX - x * unitDistance, pixelCenterY + y * unitDistance, r, g, b, unitDistance); // Quadrant 4
     Delay;
 }
 
@@ -587,15 +598,15 @@ void MainWindow::on_GenEllipseBre_clicked()
     int gridCenterX = points.back().x();
     int gridCenterY = points.back().y();
 
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
     int width = ui->workArea->width();
     int height = ui->workArea->height();
     int centerX = width / 2;
     int centerY = height / 2;
 
     // Convert grid center to actual pixel coordinates
-    int pixelCenterX = centerX + gridCenterX * gridOffset + gridOffset / 2;
-    int pixelCenterY = centerY - gridCenterY * gridOffset - gridOffset / 2;
+    int pixelCenterX = centerX + gridCenterX * unitDistance + unitDistance / 2;
+    int pixelCenterY = centerY - gridCenterY * unitDistance - unitDistance / 2;
 
     // Store the points in a set to avoid drawing duplicates
     std::set<std::pair<int, int>> ellipsePoints;
@@ -643,8 +654,8 @@ void MainWindow::on_GenEllipseBre_clicked()
 
     // Draw the ellipse points using 4-point symmetry
     for (const std::pair<int, int>& p : ellipsePoints) {
-        drawEllipsePoints(p.first, p.second, pixelCenterX, pixelCenterY, 170, 170, 170, gridOffset);
-}
+        drawEllipsePoints(p.first, p.second, pixelCenterX, pixelCenterY, 170, 170, 170, unitDistance);
+    }
 
 }
 
@@ -673,19 +684,23 @@ void MainWindow::draw_Polgon_Sides(QVector<QPoint> &polygonVertices){
 }
 
 void MainWindow::make_edges_thicker(){
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
-    QSet<QPoint> newPts;
-    for(QPoint vertex : polygon){
-        QVector<QPoint> neighbours = eight_neighbour(vertex);
-        for(QPoint neighbour:neighbours){
-            QPoint pt = point_transform(neighbour.x(),neighbour.y());
-            colorPoint(pt.x(),pt.y(), 153, 255, 153, gridOffset);
-            newPts.insert(neighbour);
-        }
-    }
-    for(QPoint pt:newPts){
-        polygon.insert(pt);
-    }
+    // int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
+    // QSet<QPoint> newPts;
+    // for(QPoint vertex : polygon){
+    //     QPoint formattedVertex = reverse_point_transform(vertex.x(),vertex.y());
+    //     qDebug()<< vertex.x() << "  " << vertex.y();
+    //     qDebug()<< formattedVertex.x() << "  " << formattedVertex.y();
+    //     QVector<QPoint> neighbours = eight_neighbour(formattedVertex);
+    //     for(QPoint neighbour:neighbours){
+    //         //QPoint pt = point_transform(neighbour.x(),neighbour.y());
+    //         //qDebug() << neighbour.x() << "  " << neighbour.y();
+    //         colorPoint(neighbour.x(),neighbour.y(), 153, 255, 153, unitDistance);
+    //         newPts.insert(neighbour);
+    //     }
+    // }
+    // for(QPoint pt:newPts){
+    //     polygon.insert(pt);
+    // }
 }
 
 void MainWindow::draw_Polygon(){
@@ -701,17 +716,34 @@ void MainWindow::on_DrawPolygon_clicked()
 }
 
 QPoint MainWindow:: point_transform(int x,int y){
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
     int width = ui->workArea->width();
     int height = ui->workArea->height();
     int centerX = width / 2;
     int centerY = height / 2;
 
-    float x_float = centerX + x * gridOffset + gridOffset / 2.0;
-    float y_float = centerY - y * gridOffset - gridOffset / 2.0;
+    float x_float = centerX + x * unitDistance + unitDistance / 2.0;
+    float y_float = centerY - y * unitDistance - unitDistance / 2.0;
     int xn = static_cast<int>(x_float);
     int yn = static_cast<int>(y_float);
     return QPoint(xn,yn);
+}
+
+QPoint MainWindow::reverse_point_transform(int xn, int yn) {
+    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
+    int width = ui->workArea->width();
+    int height = ui->workArea->height();
+    int centerX = width / 2;
+    int centerY = height / 2;
+
+    // Reverse the transformation
+    float x_float = (xn - centerX) - unitDistance / 2.0;
+    float y_float = (centerY - yn) - unitDistance / 2.0;
+
+    int x = static_cast<int>(x_float / unitDistance);
+    int y = static_cast<int>(y_float / unitDistance);
+
+    return QPoint(x, y);
 }
 
 double MainWindow::calc_slope(QPoint a,QPoint b){
@@ -721,7 +753,7 @@ double MainWindow::calc_slope(QPoint a,QPoint b){
 }
 
 void MainWindow::scanline_fill(){
-    int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
+    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
     int width = ui->workArea->width();
     int centerX = width / 2;
 
@@ -741,9 +773,9 @@ void MainWindow::scanline_fill(){
                 if((fillColor==false) && (prevCol!=-1000)){
                     for(int i=prevCol+1;i<col;++i){
                         //qDebug()<<i<<" "<<yn;
-                        float x_float2 = centerX + i * gridOffset + gridOffset / 2.0;
+                        float x_float2 = centerX + i * unitDistance + unitDistance / 2.0;
                         int xn2 = static_cast<int>(x_float2);
-                        colorPoint(xn2,yn, 0,0, 250, gridOffset);
+                        colorPoint(xn2,yn, 0,0, 250, unitDistance);
                         Delay;
                     }
                 }
@@ -806,8 +838,8 @@ void MainWindow::flood_fill_rec(QPoint seed,QSet<QPoint> &visited){
 
     //qDebug()<<pt.x()<<" "<<pt.y();
     for(QPoint child:neighbours){
-        int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
-        colorPoint(pt.x(),pt.y(),250,0,0,gridOffset);
+        //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
+        colorPoint(pt.x(),pt.y(),250,0,0,unitDistance);
         Delay;
         flood_fill_rec(child,visited);
     }
@@ -847,8 +879,8 @@ void MainWindow::boundary_fill_rec(QPoint seed){
     else neighbours = eight_neighbour(seed);
 
     for(QPoint child:neighbours){
-        int gridOffset = (ui->gridOffset->value() == 0) ? 1 : ui->gridOffset->value();
-        colorPoint(pt.x(),pt.y(),250,0,0,gridOffset);
+        //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
+        colorPoint(pt.x(),pt.y(),250,0,0,unitDistance);
         Delay;
         boundary_fill_rec(child);
     }
@@ -858,5 +890,39 @@ void MainWindow::on_boundaryFill_clicked()
 {
     qint64 n = points.size();
     boundary_fill_rec(points[n-1]);
+}
+
+void MainWindow::clear_screen(){
+    QPixmap canvas = ui->workArea->pixmap(Qt::ReturnByValue);
+    canvas = QPixmap(ui->workArea->size());
+    canvas.fill(Qt::white);
+    ui->workArea->setPixmap(canvas);
+}
+
+void MainWindow::recolor_screen(){
+    for(auto i:colorMap.keys()){
+        QColor p = colorMap[i];
+        QPoint coord = QPoint(i.first,i.second);
+        QPoint pt = point_transform(coord.x(),coord.y());
+        colorPoint(pt.x(),pt.y(),p.red(),p.green(),p.blue(),unitDistance);
+    }
+}
+
+
+void MainWindow::on_zoomOut_clicked()
+{
+    clear_screen();
+    unitDistance += 10;
+    draw_gridlines(unitDistance);
+    recolor_screen();
+}
+
+
+void MainWindow::on_zoomIn_clicked()
+{
+    clear_screen();
+    if(unitDistance > 10) unitDistance -= 10;
+    draw_gridlines(unitDistance);
+    recolor_screen();
 }
 

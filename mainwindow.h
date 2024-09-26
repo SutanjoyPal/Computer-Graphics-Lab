@@ -1,46 +1,10 @@
-// #ifndef MAINWINDOW_H
-// #define MAINWINDOW_H
-
-// #include <QMainWindow>
-
-// QT_BEGIN_NAMESPACE
-// namespace Ui {
-// class MainWindow;
-// }
-// QT_END_NAMESPACE
-
-// class MainWindow : public QMainWindow
-// {
-//     Q_OBJECT
-
-// public:
-//     MainWindow(QWidget *parent = nullptr);
-//     ~MainWindow();
-// protected:
-//     bool eventFilter(QObject *watched, QEvent *event) override;
-// private slots:
-//     void on_showAxis_clicked();
-
-//     void on_gridlines_clicked();
-
-//     void on_pushButton_clicked();
-
-//     void on_store_clicked();
-
-// private:
-//     Ui::MainWindow *ui;
-//     void colorPoint(int x,int y,int r,int g, int b, int penwidth);
-//     void delay(int ms);
-//     QPoint clickedPoint;
-// };
-// #endif // MAINWINDOW_H
-
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <queue>
 #include <QSet>
+#include <QMap>
+#include <QPair>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -61,27 +25,18 @@ private slots:
 
     void on_gridlines_clicked();
 
-
-    //void on_setCoord_clicked();
-
     void on_DDADraw_clicked();
 
     void on_store_clicked();
 
     void on_reset_clicked();
 
-    //void on_pushButton_clicked();
 
-
-    // void on_pushButton_clicked();
 
     void on_pushButton_2_clicked();
 
-    // void on_label_5_linkActivated(const QString &link);
 
     void on_GenCircle_clicked();
-
-    // void on_Radius_textChanged(const QString &arg1);
 
     void on_GenCirclePolar_clicked();
 
@@ -102,11 +57,17 @@ private slots:
 
     void on_boundaryFill_clicked();
 
+    void on_zoomOut_clicked();
+
+    void on_zoomIn_clicked();
+
 private:
     Ui::MainWindow *ui;
     QPixmap temp;
     void colorPoint(int x,int y,int r,int g, int b, int penwidth);
     void delay(int ms);
+    void draw_gridlines(int gridOffset);
+    void clear_screen();
     void draw_dda_line(float x1,float y1,float x2,float y2);
     void draw_bresenham_line(int x1, int y1, int x2, int y2);
     void draw_polar_circle(int xc,int yc);
@@ -127,6 +88,7 @@ private:
 
     void scanline_fill();
     QPoint point_transform(int x,int y);
+    QPoint reverse_point_transform(int xn, int yn);
     double calc_slope(QPoint a,QPoint b);
 
     QVector<QPoint> four_neighbour(QPoint pt);
@@ -136,10 +98,13 @@ private:
     QColor get_Color(QPoint pt);
     void boundary_fill_rec(QPoint seed);
 
+    void recolor_screen();
+
     QPoint clickedPoint;
     QVector<QPoint> points;
     QSet<QPoint> polygon;
-    //int gridOffset;
+    QMap<QPair<int,int>,QColor> colorMap;
+    int unitDistance;
 };
 #endif // MAINWINDOW_H
 

@@ -80,6 +80,8 @@ public:
     QRadioButton *FourNeighbour;
     QRadioButton *EightNeighbour;
     QPushButton *boundaryFill;
+    QPushButton *zoomOut;
+    QPushButton *zoomIn;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -322,6 +324,12 @@ public:
         boundaryFill = new QPushButton(centralwidget);
         boundaryFill->setObjectName("boundaryFill");
         boundaryFill->setGeometry(QRect(770, 570, 131, 29));
+        zoomOut = new QPushButton(centralwidget);
+        zoomOut->setObjectName("zoomOut");
+        zoomOut->setGeometry(QRect(1090, 450, 93, 29));
+        zoomIn = new QPushButton(centralwidget);
+        zoomIn->setObjectName("zoomIn");
+        zoomIn->setGeometry(QRect(1090, 500, 93, 29));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -373,6 +381,8 @@ public:
         FourNeighbour->setText(QCoreApplication::translate("MainWindow", "4 Neighbour", nullptr));
         EightNeighbour->setText(QCoreApplication::translate("MainWindow", "8 Neighbour", nullptr));
         boundaryFill->setText(QCoreApplication::translate("MainWindow", "Boundary Fill", nullptr));
+        zoomOut->setText(QCoreApplication::translate("MainWindow", "Zoom Out", nullptr));
+        zoomIn->setText(QCoreApplication::translate("MainWindow", "Zoom In", nullptr));
     } // retranslateUi
 
 };
