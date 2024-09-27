@@ -11,10 +11,10 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -65,10 +65,17 @@ private:
     Ui::MainWindow *ui;
     QPixmap temp;
     void colorPoint(int x,int y,int r,int g, int b, int penwidth);
+    void colorPoint(QPoint curPt, QColor color, int penwidth);
     void delay(int ms);
     void draw_gridlines(int gridOffset);
     void clear_screen();
-    void draw_dda_line(float x1,float y1,float x2,float y2);
+    //void draw_dda_line(int x1,int y1,int x2,int y2);
+
+    void draw_line_pts(QVector<QPoint> &linePts,QColor color);
+    void generate_dda_linePts(QPoint startPt,QPoint endPt);
+
+    void generate_bresenham_linePts(QPoint startPt,QPoint endPt);
+
     void draw_bresenham_line(int x1, int y1, int x2, int y2);
     void draw_polar_circle(int xc,int yc);
     void draw_circle_bresenham(int xc,int yc);
@@ -88,8 +95,10 @@ private:
 
     void scanline_fill();
     QPoint point_transform(int x,int y);
+    QPoint point_transform(QPoint pt);
+
     QPoint reverse_point_transform(int xn, int yn);
-    double calc_slope(QPoint a,QPoint b);
+    float calc_slope(QPoint a,QPoint b);
 
     QVector<QPoint> four_neighbour(QPoint pt);
     QVector<QPoint> eight_neighbour(QPoint pt);
@@ -100,11 +109,20 @@ private:
 
     void recolor_screen();
 
+    QMap<QString,QColor> colorPalette;
     QPoint clickedPoint;
     QVector<QPoint> points;
     QSet<QPoint> polygon;
     QMap<QPair<int,int>,QColor> colorMap;
     int unitDistance;
+    int width;
+    int height;
+    int centerX;
+    int centerY;
+
+    void initializeColorPalette();
+
+    class myTimer;
 };
 #endif // MAINWINDOW_H
 

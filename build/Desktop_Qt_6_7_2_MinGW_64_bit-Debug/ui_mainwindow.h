@@ -14,6 +14,7 @@
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QLCDNumber>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
@@ -82,6 +83,8 @@ public:
     QPushButton *boundaryFill;
     QPushButton *zoomOut;
     QPushButton *zoomIn;
+    QLCDNumber *timetaken;
+    QLabel *TimeMessage;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -330,6 +333,16 @@ public:
         zoomIn = new QPushButton(centralwidget);
         zoomIn->setObjectName("zoomIn");
         zoomIn->setGeometry(QRect(1090, 500, 93, 29));
+        timetaken = new QLCDNumber(centralwidget);
+        timetaken->setObjectName("timetaken");
+        timetaken->setGeometry(QRect(1090, 540, 121, 41));
+        TimeMessage = new QLabel(centralwidget);
+        TimeMessage->setObjectName("TimeMessage");
+        TimeMessage->setGeometry(QRect(770, 610, 631, 51));
+        QFont font3;
+        font3.setFamilies({QString::fromUtf8("Algerian")});
+        font3.setPointSize(11);
+        TimeMessage->setFont(font3);
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -383,6 +396,7 @@ public:
         boundaryFill->setText(QCoreApplication::translate("MainWindow", "Boundary Fill", nullptr));
         zoomOut->setText(QCoreApplication::translate("MainWindow", "Zoom Out", nullptr));
         zoomIn->setText(QCoreApplication::translate("MainWindow", "Zoom In", nullptr));
+        TimeMessage->setText(QString());
     } // retranslateUi
 
 };
