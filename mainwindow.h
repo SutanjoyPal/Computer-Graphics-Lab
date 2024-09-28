@@ -31,13 +31,6 @@ private slots:
 
     void on_reset_clicked();
 
-
-
-    void on_pushButton_2_clicked();
-
-
-    void on_GenCircle_clicked();
-
     void on_GenCirclePolar_clicked();
 
     void on_GenCartCircle_clicked();
@@ -61,6 +54,12 @@ private slots:
 
     void on_zoomIn_clicked();
 
+    void on_BresenhamLineDraw_clicked();
+
+    void on_GenBresenhamCircle_clicked();
+
+    void on_GenMidPtCircle_clicked();
+
 private:
     Ui::MainWindow *ui;
     QPixmap temp;
@@ -71,16 +70,20 @@ private:
     void clear_screen();
     //void draw_dda_line(int x1,int y1,int x2,int y2);
 
-    void draw_line_pts(QVector<QPoint> &linePts,QColor color);
-    void generate_dda_linePts(QPoint startPt,QPoint endPt);
+    void color_pts(QVector<QPoint> &linePts,QColor color);
+    void color_pts(QSet<QPoint> &linePts,QColor color);
+    QVector<QPoint> generate_dda_linePts(QPoint startPt,QPoint endPt);
+    QVector<QPoint> generate_bresenham_linePts(QPoint startPt,QPoint endPt);
 
-    void generate_bresenham_linePts(QPoint startPt,QPoint endPt);
+    void eight_pt_symmetry(QVector<QPoint> &pts,QPoint curPt,QPoint centre);
+    QVector<QPoint> generate_polar_circlePts(QPoint centre);
+    QVector<QPoint> generate_bresenham_circlePts(QPoint centre);
+    QVector<QPoint> generate_midpoint_circlePts(QPoint centre);
+    QVector<QPoint> generate_cartesian_circlePts(QPoint centre);
 
-    void draw_bresenham_line(int x1, int y1, int x2, int y2);
-    void draw_polar_circle(int xc,int yc);
-    void draw_circle_bresenham(int xc,int yc);
-    void EightPtSym(QVector<QPoint> &pts,float x_float,float y_float,int x,int y);
-    void drawCirclePoints(int x, int y, int pixelCenterX, int pixelCenterY, int r, int g, int b, int gridOffset);
+    void four_pt_symmetry(QVector<QPoint> &pts,QPoint curPt,QPoint centre);
+    QVector<QPoint> generate_polar_ellipsePts(QPoint focus1,QPoint focus2);
+
     //void draw_bresenham_ellipse(QPoint f1, QPoint f2);
     void draw_polar_ellipse(QPoint f1, QPoint f2);
     void drawEllipsePoints(int x, int y, int pixelCenterX, int pixelCenterY, int r, int g, int b, int gridOffset);
@@ -102,10 +105,12 @@ private:
 
     QVector<QPoint> four_neighbour(QPoint pt);
     QVector<QPoint> eight_neighbour(QPoint pt);
-    void flood_fill_rec(QPoint seed,QSet<QPoint> &visited);
+    //void flood_fill_rec(QPoint seed,QSet<QPoint> &visited);
 
     QColor get_Color(QPoint pt);
-    void boundary_fill_rec(QPoint seed);
+    //void boundary_fill_rec(QPoint seed);
+    void boundary_fill_rec(QPoint seed,QColor boundaryColor,QColor fillColor);
+    void flood_fill_rec(QPoint seed,QColor oldColor,QColor newColor);
 
     void recolor_screen();
 

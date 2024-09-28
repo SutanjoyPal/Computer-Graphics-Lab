@@ -92,7 +92,7 @@ void MainWindow::colorPoint(QPoint curPt, QColor color, int penwidth=1) {
     QPoint pt = point_transform(curPt);
     painter.drawPoint(pt.x(), pt.y());
     ui->workArea->setPixmap(canvas);
-    qDebug()<<"Point Coloured: "<<curPt.x()<<"  "<<curPt.y();
+    //qDebug()<<"Point Coloured: "<<curPt.x()<<"  "<<curPt.y();
     colorMap[{curPt.x(),curPt.y()}] = color;
 }
 
@@ -210,21 +210,6 @@ QPoint MainWindow:: point_transform(QPoint pt){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void MainWindow::on_reset_clicked()
 {
     clear_screen();
@@ -253,26 +238,31 @@ public:
     myTimer(QString algoName, MainWindow* mainWindow) {
         this->algoName = algoName;
         this->mainWindow = mainWindow;
-    }
-
-    void startTimer(){
         timer.start();
     }
 
     void measureTime() {
         qint64 elapsedTime = timer.nsecsElapsed();
-        mainWindow->ui->TimeMessage->setText(QString("Time taken by ")+algoName+QString(" algorithm in nanoseconds"));
+        mainWindow->ui->TimeMessage->setText(QString("By ")+algoName+QString(" drawing algorithm"));
         mainWindow->ui->timetaken->display(QString::number(elapsedTime));
     }
 };
 
-void MainWindow::draw_line_pts(QVector<QPoint> &linePts,QColor color){
+void MainWindow::color_pts(QVector<QPoint> &linePts,QColor color){
     for(QPoint currentPt : linePts){
         colorPoint(currentPt,color);
+        delay(1);
+    }
+}
+void MainWindow::color_pts(QSet<QPoint> &linePts,QColor color){
+    for(QPoint currentPt : linePts){
+        colorPoint(currentPt,color);
+        delay(1);
     }
 }
 
-void MainWindow::generate_dda_linePts(QPoint startPt,QPoint endPt){
+
+QVector<QPoint> MainWindow::generate_dda_linePts(QPoint startPt,QPoint endPt){
     int startX = startPt.x(),startY = startPt.y();
     int endX = endPt.x(),endY = endPt.y();
 
@@ -282,8 +272,7 @@ void MainWindow::generate_dda_linePts(QPoint startPt,QPoint endPt){
     float xinc = (dx*1.0)/steps,yinc = (dy*1.0/steps);
     float curX = startX,curY = startY;
 
-    myTimer t("DDA Line Drawing",this);
-    t.startTimer();
+    myTimer t("DDA Line",this);
     QVector<QPoint> linePts;
     linePts.push_back(startPt);
     while((startX != endX)||(startY!=endY)){
@@ -294,408 +283,274 @@ void MainWindow::generate_dda_linePts(QPoint startPt,QPoint endPt){
         linePts.push_back(QPoint(startX,startY));
     }
     t.measureTime();
-    draw_line_pts(linePts,colorPalette["pink"]);
-
+    return linePts;
 }
 
 void MainWindow::on_DDADraw_clicked()
 {
     if(points.size()< 2 ) return;
     qint64 n  = points.size();
-    generate_dda_linePts(points[n-2],points[n-1]);
+    QVector<QPoint> linePts = generate_dda_linePts(points[n-2],points[n-1]);
+    color_pts(linePts,colorPalette["pink"]);
 }
 
+QVector<QPoint> MainWindow::generate_bresenham_linePts(QPoint startPt,QPoint endPt){
 
-// void MainWindow::generate_bresenham_linePts(QPoint startPt,QPoint endPt){
-//     if(startPt.x()>endPt.x()) std::swap(startPt,endPt);
+    int startX = startPt.x(),startY = startPt.y();
+    int endX = endPt.x(),endY = endPt.y();
+    int dx = abs(endX-startX),dy = abs(endY-startY);
 
-//     int startX = startPt.x(),startY = startPt.y();
-//     int endX = endPt.x(),endY = endPt.y();
-//     int dx = endX-startX,dy = endY-startY;
+    int xStep = (endX > startX ? 1:-1);
+    int yStep = (endY > startY ? 1:-1);
+    bool flag=1;
 
+    if(dy>dx){
+        std::swap(startX,startY);
+        std::swap(dx,dy);
+        std::swap(xStep,yStep);
+        flag=0;
+    }
 
-//     QVector<QPoint> linePts;
-//     // Handle the case where the line is nearly horizontal
-//     if (std::abs(dy) < std::abs(dx)) {
-//         // Determine the direction of y increment
-//         int yStep = (dy > 0) ? 1 : -1;
-//         int p = 2 * dy - dx;
-
-//         while (startX <= endX) {
-//             linePts.push_back(QPoint(startX, startY));
-//             startX++;
-
-//             // Update the decision parameter
-//             if (p < 0) {
-//                 p += 2 * dy;
-//             } else {
-//                 startY += yStep;
-//                 p += (2 * dy - 2 * dx);
-//             }
-//         }
-//     } else { // Handle the case where the line is nearly vertical
-//         // Determine the direction of x increment
-//         int xStep = (dx > 0) ? 1 : -1;
-//         int p = 2 * dx - dy;
-
-//         while (startY != endY) {
-//             linePts.push_back(QPoint(startX, startY));
-//             startY += (dy > 0) ? 1 : -1;
-
-//             // Update the decision parameter
-//             if (p < 0) {
-//                 p += 2 * dx;
-//             } else {
-//                 startX += xStep;
-//                 p += (2 * dx - 2 * dy);
-//             }
-//         }
-//     }
-//     draw_line_pts(linePts,colorPalette["maroon"]);
-// }
-
-void MainWindow::generate_bresenham_linePts(QPoint startPt, QPoint endPt) {
-    // Ensure startPt is to the left of endPt
-    if (startPt.x() > endPt.x()) std::swap(startPt, endPt);
-
-    int startX = startPt.x(), startY = startPt.y();
-    int endX = endPt.x(), endY = endPt.y();
-    int dx = endX - startX;
-    int dy = endY - startY;
-
+    int p = 2*dy-dx;
     QVector<QPoint> linePts;
-
-    // Determine the direction of increments
-    int xStep = 1; // Always moving from left to right
-    int yStep = (dy > 0) ? 1 : -1; // Determine if y should increment or decrement
-
-    // Handle cases based on slope
-    if (std::abs(dy) < std::abs(dx)) { // Gentle slope
-        int p = 2 * dy - dx; // Initial decision parameter
-
-        while (startX != endX) {
-            linePts.push_back(QPoint(startX, startY));
-            startX += xStep; // Move to the next x position
-
-            // Update decision parameter
-            if (p < 0) {
-                p += 2 * dy; // Stay on the same row
-            } else {
-                startY += yStep; // Move to the next row (up or down based on slope)
-                p += (2 * dy - 2 * dx); // Update for next iteration
-            }
+    myTimer t("Bresenham Line",this);
+    for(int steps=0;steps<=dx;++steps){
+        if(flag==0){
+            linePts.push_back(QPoint(startY,startX));
         }
-    } else { // Steep slope
-        int p = 2 * dx - dy; // Initial decision parameter
+        else linePts.push_back(QPoint(startX,startY));
+        startX+=xStep;
 
-        while (startY != endY) {
-            linePts.push_back(QPoint(startX, startY));
-            startY += yStep; // Move to the next y position
-
-            // Update decision parameter
-            if (p < 0) {
-                p += 2 * dx; // Stay on the same column
-            } else {
-                startX += xStep; // Move to the next column
-                p += (2 * dx - 2 * dy); // Update for next iteration
-            }
+        if(p<0){
+            p+=2*dy;
         }
+        else{
+            startY+=yStep;
+            p+=(2*dy-2*dx);
+        }
+
     }
+    t.measureTime();
+    return linePts;
 
-    // Draw the line points
-    draw_line_pts(linePts, colorPalette["maroon"]);
 }
 
-
-
-
-
-void MainWindow::draw_bresenham_line(int x1, int y1, int x2, int y2) {
-    int dx = abs(x2 - x1);
-    int dy = abs(y2 - y1);
-    int sx = (x1 < x2) ? 1 : -1;
-    int sy = (y1 < y2) ? 1 : -1;
-    int err = dx - dy;
-
-    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
-    int width = ui->workArea->width();
-    int height = ui->workArea->height();
-    int centerX = width / 2;
-    int centerY = height / 2;
-
-    QVector<QPoint> pts;
-    QElapsedTimer timer;
-    timer.start();
-
-    int cnt=0;
-    while (true) {
-        int calcX = centerX + x1 * unitDistance + unitDistance / 2;
-        int calcY = centerY - y1 * unitDistance - unitDistance / 2;
-        pts.push_back(QPoint(calcX, calcY));
-        polygon.insert(QPoint(calcX,calcY));
-
-        if (x1 == x2 && y1 == y2) break;
-        int e2 = 2 * err;
-        if (e2 > -dy) {
-            err -= dy;
-            x1 += sx;
-        }
-        if (e2 < dx) {
-            err += dx;
-            y1 += sy;
-        }
-        cnt++;
-    }
-    qDebug() << cnt;
-    qint64 elapsedTime = timer.nsecsElapsed();
-    ui->Bresenham_Time->setText(QString("Time Taken: ") + QString::number(elapsedTime) + QString(" ns"));
-
-    for (auto &pt : pts) {
-        colorPoint(pt.x(), pt.y(), 153, 255, 153, unitDistance);
-    }
-}
-
-
-void MainWindow::on_pushButton_2_clicked()
+void MainWindow::on_BresenhamLineDraw_clicked()
 {
     if(points.size()< 2 ) return;
     qint64 n  = points.size();
-    auto coords1 = points[n-1];
-    auto coords2 = points[n-2];
-    generate_bresenham_linePts(points[n-2],points[n-1]);
+    QVector<QPoint> linePts = generate_bresenham_linePts(points[n-2],points[n-1]);
+    color_pts(linePts,colorPalette["maroon"]);
 }
 
 
 
-void MainWindow::draw_polar_circle(int xc,int yc){
-
-
-    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
-    int width = ui->workArea->width();
-    int height = ui->workArea->height();
-    int centerX = width / 2;
-    int centerY = height / 2;
-
-    float x_float = centerX + xc * unitDistance + unitDistance / 2.0;
-    float y_float = centerY - yc * unitDistance - unitDistance / 2.0;
-
-
-    float r = (ui->Radius->value())*unitDistance;
-
-    QVector<QPoint> pts;
-    QElapsedTimer timer;
-    timer.start();
-    for (int angle = 0; angle < 360; ++angle) {
-        double radian = angle * M_PI / 180.0;  // Convert degree to radian
-        int x = static_cast<int>(x_float+(r * cos(radian)));
-        int y = static_cast<int>(y_float+(r * sin(radian)));
-
-        int X = floor((x-centerX)*1.0/unitDistance);
-        int Y = floor((centerY-y)*1.0/unitDistance);
-        int calcX = centerX+ X*unitDistance + unitDistance/2;
-        int calcY = centerY -  Y*unitDistance - unitDistance/2;
-        pts.push_back(QPoint(calcX, calcY));
-
-
-        //pts.push_back(QPoint(x, y));
-
-
-    }
-    qint64 elapsedTime = timer.nsecsElapsed();
-    ui->PolarTime->setText(QString("Time Taken: ") + QString::number(elapsedTime) + QString(" ns"));
-
-    for(auto &pt:pts){
-        qDebug()<<pt.x()<<" "<<pt.y();
-        colorPoint(pt.x(), pt.y(), 102, 0, 204, unitDistance);
-        delay(1);
-    }
-}
-
-void MainWindow::EightPtSym(QVector<QPoint> &pts,float x_float,float y_float,int x,int y){
-    //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
-    int width = ui->workArea->width();
-    int height = ui->workArea->height();
-    int centerX = width / 2;
-    int centerY = height / 2;
-
-
-
-    int dx[] = {x,-x,x,-x,y,-y,y,-y};
-    int dy[] = {y,y,-y,-y,x,x,-x,-x};
+void MainWindow::eight_pt_symmetry(QVector<QPoint> &pts,QPoint curPt,QPoint centre){
+    int centreX=centre.x(),centreY=centre.y();
+    int x = curPt.x(), y =curPt.y();
+    int newX[] = {x,-x,x,-x,y,-y,y,-y};
+    int newY[] = {y,y,-y,-y,x,x,-x,-x};
 
     for(int i=0;i<8;++i){
-        int xn = static_cast<int>(x_float+dx[i]);
-        int yn = static_cast<int>(y_float+dy[i]);
-        int X = floor((xn-centerX)*1.0/unitDistance);
-        int Y = floor((centerY-yn)*1.0/unitDistance);
-        int calcX = centerX+ X*unitDistance + unitDistance/2;
-        int calcY = centerY -  Y*unitDistance - unitDistance/2;
-        pts.push_back(QPoint(calcX, calcY));
+        pts.push_back(QPoint(centreX+newX[i],centreY+newY[i]));
     }
 }
 
+QVector<QPoint> MainWindow::generate_polar_circlePts(QPoint centre){
+    int centreX=centre.x(),centreY=centre.y();
+    float r = ui->Radius->value();
 
-void MainWindow::draw_circle_bresenham(int xc,int yc){
-    ///int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
-    int width = ui->workArea->width();
-    int height = ui->workArea->height();
-    int centerX = width / 2;
-    int centerY = height / 2;
-
-    float x_float = centerX + xc * unitDistance + unitDistance / 2.0;
-    float y_float = centerY - yc * unitDistance - unitDistance / 2.0;
-
-    float r = (ui->Radius->value())*unitDistance;
-    QVector<QPoint> pts;
-
-    int x = 0;
-    int y = r;
-    int d = 3 - 2 * r;
-    EightPtSym(pts,x_float,y_float,x,y);
-    QElapsedTimer timer;
-    timer.start();
-    while (y >= x) {
-        x++;
-
-        if (d > 0) {
-            y--;
-            d += 4 * (x - y) + 10;
-        } else {
-            d += 4 * x + 6;
-        }
-
-        EightPtSym(pts,x_float,y_float,x,y);
+    QVector<QPoint> circlePts;
+    myTimer t("Polar Circle",this);
+    for(int angle = 0;angle <= 45;++angle){
+        float radian = angle * M_PI / 180.0;
+        int curX = std::round((r*cos(radian)));
+        int curY = std::round((r*sin(radian)));
+        QPoint curPt = QPoint(curX,curY);
+        eight_pt_symmetry(circlePts,curPt,QPoint(centreX,centreY));
     }
-    qint64 elapsedTime = timer.nsecsElapsed();
-    ui->BresenhamCircleTime->setText(QString("Time Taken: ") + QString::number(elapsedTime) + QString(" ns"));
-
-    for(auto &pt:pts){
-        qDebug()<<pt.x()<<" "<<pt.y();
-        colorPoint(pt.x(), pt.y(), 255, 51, 51, unitDistance);
-        delay(1);
-    }
+    t.measureTime();
+    return circlePts;
 }
-
-void MainWindow::on_GenCircle_clicked()
-{
-    qint64 n  = points.size();
-    int xc = points[n-1].x();
-    int yc = points[n-1].y();
-    //draw_polar_circle(xc,yc);
-    draw_circle_bresenham(xc,yc);
-}
-
-
-
 
 void MainWindow::on_GenCirclePolar_clicked()
 {
     qint64 n  = points.size();
-    int xc = points[n-1].x();
-    int yc = points[n-1].y();
-    draw_polar_circle(xc,yc);
+    QVector<QPoint> circlePts = generate_polar_circlePts(points[n-1]);
+    color_pts(circlePts,colorPalette["olive"]);
 }
 
+QVector<QPoint> MainWindow::generate_bresenham_circlePts(QPoint centre){
+    int r = ui->Radius->value();
+    int curX=0,curY=r;
+
+    int p = 3-2*r;
+    QVector<QPoint> circlePts;
+    myTimer t("Bresenham Circle",this);
+    while(curX <= curY){
+        eight_pt_symmetry(circlePts,QPoint(curX,curY),centre);
+        curX++;
+        if(p >= 0){
+            curY--;
+            p+=(4*(curX-curY)+10);
+        }
+        else{
+            p+=(4*curX+6);
+        }
+    }
+    t.measureTime();
+    return circlePts;
+}
+
+void MainWindow::on_GenBresenhamCircle_clicked()
+{
+    qint64 n  = points.size();
+    QVector<QPoint> circlePts = generate_midpoint_circlePts(points[n-1]);
+    color_pts(circlePts,colorPalette["navy"]);
+}
+
+QVector<QPoint> MainWindow::generate_midpoint_circlePts(QPoint centre){
+    int r = ui->Radius->value();
+    int curX=0,curY=r;
+
+    int p = 1-r;
+    QVector<QPoint> circlePts;
+    myTimer t("MidPoint Circle",this);
+    while(curX<=curY){
+        eight_pt_symmetry(circlePts,QPoint(curX,curY),centre);
+        if(p<0){
+            p+=(2*curX+3);
+        }
+        else{
+            p+=(2*curX+2*curY+5);
+            curY--;
+        }
+        curX++;
+    }
+    t.measureTime();
+    return circlePts;
+}
+
+void MainWindow::on_GenMidPtCircle_clicked()
+{
+    qint64 n  = points.size();
+    QVector<QPoint> circlePts = generate_bresenham_circlePts(points[n-1]);
+    color_pts(circlePts,colorPalette["teal"]);
+}
+
+QVector<QPoint> MainWindow::generate_cartesian_circlePts(QPoint centre){
+    float r = ui->Radius->value();
+
+    QVector<QPoint> circlePts;
+    myTimer t("Cartesian Circle",this);
+    for(int curX=0;(curX*1.0)<=(r/std::sqrt(2));++curX){
+        int curY=std::round((r*r-curX*curX));
+        eight_pt_symmetry(circlePts,QPoint(curX,curY),centre);
+    }
+    t.measureTime();
+    return circlePts;
+}
 
 void MainWindow::on_GenCartCircle_clicked()
 {
-
     qint64 n  = points.size();
-    int gx = points[n-1].x();
-    int gy = points[n-1].y();
+    QVector<QPoint> circlePts = generate_midpoint_circlePts(points[n-1]);
+    color_pts(circlePts,colorPalette["lime"]);
+}
 
 
-    int offset = unitDistance;
-    int w = ui->workArea->width();
-    int h = ui->workArea->height();
-    int cx = w / 2;
-    int cy = h / 2;
-    double r = static_cast<int>((ui->Radius->value()));
-    int px = cx + gx * offset + offset / 2;
-    int py = cy - gy * offset - offset / 2;
 
-    QElapsedTimer t;
-    t.start();
-    for (double x = 0; x <= r; x++) {
-        int y = static_cast<int>(sqrt(r * r - x * x));
-        qDebug()<<x<<" "<<y;
-        drawCirclePoints(x, y, px, py, 255, 0, 255, unitDistance);
+
+void MainWindow::four_pt_symmetry(QVector<QPoint> &pts,QPoint curPt,QPoint centre){
+    colorPoint(centre,colorPalette["gold"]);
+    int centreX=centre.x(),centreY=centre.y();
+    int x = curPt.x(), y =curPt.y();
+    int newX[] = {x,-x,x,-x};
+    int newY[] = {y,y,-y,-y};
+
+    for(int i=0;i<4;++i){
+        pts.push_back(QPoint(centreX+newX[i],centreY+newY[i]));
     }
-
-    // qint64 timeMs = t.elapsed();
-    // ui->CartTime->setText(QString::number(timeMs) + " ms");
-    qint64 elapsedTime = t.nsecsElapsed();
-    ui->CartTime->setText(QString("Time Taken: ") + QString::number(elapsedTime) + QString(" ns"));
-
 }
 
-void MainWindow::drawCirclePoints(int x, int y, int pixelCenterX, int pixelCenterY, int r, int g, int b, int unitDistance) {
-    colorPoint(pixelCenterX + x * unitDistance, pixelCenterY - y * unitDistance, r, g, b, unitDistance);
-    Delay;
-    colorPoint(pixelCenterX - x * unitDistance, pixelCenterY - y * unitDistance, r, g, b, unitDistance);
-    Delay;
-    colorPoint(pixelCenterX + x * unitDistance, pixelCenterY + y * unitDistance, r, g, b, unitDistance);
-    Delay;
-    colorPoint(pixelCenterX - x * unitDistance, pixelCenterY + y * unitDistance, r, g, b, unitDistance);
-    Delay;
-    colorPoint(pixelCenterX + y * unitDistance, pixelCenterY - x * unitDistance, r, g, b, unitDistance);
-    Delay;
-    colorPoint(pixelCenterX - y * unitDistance, pixelCenterY - x * unitDistance, r, g, b, unitDistance);
-    Delay;
-    colorPoint(pixelCenterX + y * unitDistance, pixelCenterY + x * unitDistance, r, g, b, unitDistance);
-    Delay;
-    colorPoint(pixelCenterX - y * unitDistance, pixelCenterY + x * unitDistance, r, g, b, unitDistance);
-    Delay;
+QVector<QPoint> MainWindow::generate_polar_ellipsePts(QPoint focus1,QPoint focus2){
+    int focus1X = focus1.x(),focus1Y = focus1.y();
+    int focus2X = focus2.x(),focus2Y = focus2.y();
+
+    int centreX = std::round(((focus1X+focus2X*1.0)/2.0));
+    int centreY = std::round(((focus1Y+focus2Y*1.0)/2.0));
+    QPoint centre = QPoint(centreX,centreY);
+    colorPoint(centre,colorPalette["gold"]);
+    float semiMajor  = ui->major->value();
+    float semiMinor = ui->minor->value();
+
+    QVector<QPoint> ellipsePts;
+    myTimer t("Polar Ellipse",this);
+    for(int angle=0;angle<=360;++angle){
+        float radian = angle * M_PI / 180.0;
+        int curX = std::round(semiMajor*cos(radian));
+        int curY = std::round(semiMinor*sin(radian));
+        ellipsePts.push_back(QPoint(centreX+curX,centreY+curY));
+        //four_pt_symmetry(ellipsePts,QPoint(curX,curY),centre);
+    }
+    t.measureTime();
+    for(QPoint pt:ellipsePts){
+        qDebug()<<"Ellipse Pt "<<pt.x()<<" "<<pt.y();
+    }
+    return ellipsePts;
 }
+
 
 
 void MainWindow::draw_polar_ellipse(QPoint f1, QPoint f2) {
     //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
-    int width = ui->workArea->width();
-    int height = ui->workArea->height();
-    int centerX = width / 2;
-    int centerY = height / 2;
+    QVector<QPoint> ellipsePts = generate_polar_ellipsePts(f1,f2);
+    color_pts(ellipsePts,colorPalette["gray"]);
+    // int width = ui->workArea->width();
+    // int height = ui->workArea->height();
+    // int centerX = width / 2;
+    // int centerY = height / 2;
 
-    // Convert focus points to pixel coordinates
-    float x1 = centerX + f1.x() * unitDistance + unitDistance / 2.0;
-    float y1 = centerY - f1.y() * unitDistance - unitDistance / 2.0;
-    float x2 = centerX + f2.x() * unitDistance + unitDistance / 2.0;
-    float y2 = centerY - f2.y() * unitDistance - unitDistance / 2.0;
+    // // Convert focus points to pixel coordinates
+    // float x1 = centerX + f1.x() * unitDistance + unitDistance / 2.0;
+    // float y1 = centerY - f1.y() * unitDistance - unitDistance / 2.0;
+    // float x2 = centerX + f2.x() * unitDistance + unitDistance / 2.0;
+    // float y2 = centerY - f2.y() * unitDistance - unitDistance / 2.0;
 
-    // Calculate the center of the ellipse as the midpoint of the two foci
-    float xc = (x1 + x2) / 2.0;
-    float yc = (y1 + y2) / 2.0;
+    // // Calculate the center of the ellipse as the midpoint of the two foci
+    // float xc = (x1 + x2) / 2.0;
+    // float yc = (y1 + y2) / 2.0;
 
-    // Fixed semi-major and semi-minor axes
-    float a = ui->major->value()*unitDistance;
-    float b = ui->minor->value()*unitDistance;
+    // // Fixed semi-major and semi-minor axes
+    // float a = ui->major->value()*unitDistance;
+    // float b = ui->minor->value()*unitDistance;
 
-    QVector<QPoint> pts;
-    QElapsedTimer timer;
-    timer.start();
+    // QVector<QPoint> pts;
+    // QElapsedTimer timer;
+    // timer.start();
 
-    // Draw the ellipse using polar coordinates
-    for (int angle = 0; angle < 360; ++angle) {
-        double radian = angle * M_PI / 180.0; // Convert degrees to radians
-        int x = static_cast<int>(xc + a * cos(radian));
-        int y = static_cast<int>(yc + b * sin(radian));
+    // // Draw the ellipse using polar coordinates
+    // for (int angle = 0; angle < 360; ++angle) {
+    //     double radian = angle * M_PI / 180.0; // Convert degrees to radians
+    //     int x = static_cast<int>(xc + a * cos(radian));
+    //     int y = static_cast<int>(yc + b * sin(radian));
 
-        int gridX = floor((x - centerX) * 1.0 / unitDistance);
-        int gridY = floor((centerY - y) * 1.0 / unitDistance);
-        int calcX = centerX + gridX * unitDistance + unitDistance / 2;
-        int calcY = centerY - gridY * unitDistance - unitDistance / 2;
-        pts.push_back(QPoint(calcX, calcY));
-    }
+    //     int gridX = floor((x - centerX) * 1.0 / unitDistance);
+    //     int gridY = floor((centerY - y) * 1.0 / unitDistance);
+    //     int calcX = centerX + gridX * unitDistance + unitDistance / 2;
+    //     int calcY = centerY - gridY * unitDistance - unitDistance / 2;
+    //     pts.push_back(QPoint(calcX, calcY));
+    // }
 
-    qint64 elapsedTime = timer.nsecsElapsed();
-    //ui->PolarTime->setText(QString("Time Taken: ") + QString::number(elapsedTime) + QString(" ns"));
+    // qint64 elapsedTime = timer.nsecsElapsed();
+    // //ui->PolarTime->setText(QString("Time Taken: ") + QString::number(elapsedTime) + QString(" ns"));
 
-    // Draw each calculated point
-    for (auto &pt : pts) {
-        qDebug() << pt.x() << " " << pt.y();
-        colorPoint(pt.x(), pt.y(), 102, 0, 204, unitDistance);
-        delay(1); // Optional delay for visualization
-    }
+    // // Draw each calculated point
+    // for (auto &pt : pts) {
+    //     qDebug() << pt.x() << " " << pt.y();
+    //     colorPoint(pt.x(), pt.y(), 102, 0, 204, unitDistance);
+    //     delay(1); // Optional delay for visualization
+    // }
 }
 
 
@@ -820,40 +675,40 @@ void MainWindow::draw_Polgon_Sides(QVector<QPoint> &polygonVertices){
     for(int i=0;i<polygonVertices.size();++i){
         QPoint curVertex = polygonVertices[i];
         QPoint nextVertex = polygonVertices[(i+1)%vertexCount];
-        draw_bresenham_line(curVertex.x(),curVertex.y(),nextVertex.x(),nextVertex.y());
+        QVector<QPoint> sidePts = generate_bresenham_linePts(curVertex,nextVertex);
+        for(QPoint curPt:sidePts){
+            polygon.insert(curPt);
+        }
+        //draw_bresenham_line(curVertex.x(),curVertex.y(),nextVertex.x(),nextVertex.y());
     }
 }
 
 void MainWindow::make_edges_thicker(){
-    // int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
-    // QSet<QPoint> newPts;
-    // for(QPoint vertex : polygon){
-    //     QPoint formattedVertex = reverse_point_transform(vertex.x(),vertex.y());
-    //     qDebug()<< vertex.x() << "  " << vertex.y();
-    //     qDebug()<< formattedVertex.x() << "  " << formattedVertex.y();
-    //     QVector<QPoint> neighbours = eight_neighbour(formattedVertex);
-    //     for(QPoint neighbour:neighbours){
-    //         //QPoint pt = point_transform(neighbour.x(),neighbour.y());
-    //         //qDebug() << neighbour.x() << "  " << neighbour.y();
-    //         colorPoint(neighbour.x(),neighbour.y(), 153, 255, 153, unitDistance);
-    //         newPts.insert(neighbour);
-    //     }
-    // }
-    // for(QPoint pt:newPts){
-    //     polygon.insert(pt);
-    // }
+    QVector<QPoint> neighbourPts;
+    for(QPoint curPt:polygon){
+        QVector<QPoint> neighbours = eight_neighbour(curPt);
+        for(QPoint curNeighbour:neighbours){
+            neighbourPts.push_back(curNeighbour);
+        }
+    }
+    for(QPoint curPt:neighbourPts){
+        polygon.insert(curPt);
+    }
 }
 
 void MainWindow::draw_Polygon(){
     polygon.clear();
     QVector<QPoint> polygonVertices = get_Vertices();
     draw_Polgon_Sides(polygonVertices);
-    //make_edges_thicker();
 }
 
 void MainWindow::on_DrawPolygon_clicked()
 {
+    myTimer t("Polygon",this);
     draw_Polygon();
+    if(ui->ThickEdges->isChecked()) make_edges_thicker();
+    t.measureTime();
+    color_pts(polygon,colorPalette["purple"]);
 }
 
 
@@ -944,79 +799,69 @@ QVector<QPoint> MainWindow::eight_neighbour(QPoint pt){
     return neighbours;
 }
 
-
-void MainWindow::flood_fill_rec(QPoint seed,QSet<QPoint> &visited){
-    QPoint pt = point_transform(seed.x(),seed.y());
-
-    // if(polygon.find(pt)!=polygon.end()) return;
-    // //qDebug()<<"Not in edge";
-    // if(visited.find(pt)!=visited.end()) return;
-    // visited.insert(pt);
-    QColor current_clr = get_Color(pt);
-
-    if(!((current_clr.red()==255) && (current_clr.green()==255) && (current_clr.blue()==0)))
-    if((current_clr.red()!=255) || (current_clr.green()!=255) || (current_clr.blue()!=255)) return;
-
-    QVector<QPoint> neighbours;
-    if(ui->FourNeighbour->isChecked()){
-        neighbours = four_neighbour(seed);
-    }
-    else neighbours = eight_neighbour(seed);
-
-    //qDebug()<<pt.x()<<" "<<pt.y();
-    for(QPoint child:neighbours){
-        //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
-        colorPoint(pt.x(),pt.y(),250,0,0,unitDistance);
-        Delay;
-        flood_fill_rec(child,visited);
-    }
-}
-
-
-
-
-void MainWindow::on_FloodFill4_clicked()
-{
-    qint64 n = points.size();
-    QSet<QPoint> visited;
-    flood_fill_rec(points[n-1],visited);
-}
-
-QColor MainWindow::get_Color(QPoint pt){
+QColor MainWindow::get_Color(QPoint curPt){
+    QPoint pt = point_transform(curPt);
     QImage canvas=ui->workArea->pixmap(Qt::ReturnByValue).toImage();
     QColor clr=canvas.pixelColor(pt.x(),pt.y());
-    qDebug()<<pt.x()<<" "<<pt.y();
-    qDebug()<<clr.red()<<" "<<clr.green()<<" "<<clr.blue();
+    //qDebug()<<pt.x()<<" "<<pt.y();
+    //qDebug()<<clr.red()<<" "<<clr.green()<<" "<<clr.blue();
     return clr;
 }
 
 
-void MainWindow::boundary_fill_rec(QPoint seed){
-    QPoint pt = point_transform(seed.x(),seed.y());
-
-    QColor current_clr = get_Color(pt);
-    if((current_clr.red()==153) && (current_clr.green()==255) && (current_clr.blue()==153)) return; //check if boundary color
-
-    if((current_clr.red()==250) && (current_clr.green()==0) && (current_clr.blue()==0)) return; //check if already colored
+void MainWindow::flood_fill_rec(QPoint seed,QColor oldColor,QColor newColor){
+    QColor currentColor = get_Color(seed);
+    if(currentColor == newColor) return;
+    if((currentColor != oldColor)&&(currentColor!=colorPalette["yellow"])) return;
 
     QVector<QPoint> neighbours;
-    if(ui->FourNeighbour->isChecked()){
-        neighbours = four_neighbour(seed);
+    if(ui->EightNeighbour->isChecked()){
+        neighbours = eight_neighbour(seed);
     }
-    else neighbours = eight_neighbour(seed);
+    else neighbours = four_neighbour(seed);
+    for(QPoint child:neighbours){
+        colorPoint(seed,newColor);
+        delay(1);
+        flood_fill_rec(child,oldColor,newColor);
+    }
+}
+
+void MainWindow::on_FloodFill4_clicked()
+{
+    qint64 n = points.size();
+    myTimer t("Flood Fill",this);
+    flood_fill_rec(points[n-1],colorPalette["white"],colorPalette["orange"]);
+    t.measureTime();
+}
+
+
+void MainWindow::boundary_fill_rec(QPoint seed,QColor boundaryColor,QColor fillColor){
+    QColor current_clr = get_Color(seed);
+    if(current_clr == boundaryColor) return;
+    if(current_clr == fillColor) return;
+
+
+    QVector<QPoint> neighbours;
+    if(ui->EightNeighbour->isChecked()){
+        neighbours = eight_neighbour(seed);
+    }
+    else neighbours = four_neighbour(seed);
+
 
     for(QPoint child:neighbours){
-        //int unitDistance = (ui->unitDistance->value() == 0) ? 1 : ui->unitDistance->value();
-        colorPoint(pt.x(),pt.y(),250,0,0,unitDistance);
-        Delay;
-        boundary_fill_rec(child);
+        colorPoint(seed,fillColor);
+        delay(1);
+        boundary_fill_rec(child,boundaryColor,fillColor);
     }
 }
 
 void MainWindow::on_boundaryFill_clicked()
 {
     qint64 n = points.size();
-    boundary_fill_rec(points[n-1]);
+    get_Color(points[n-1]);
+    myTimer t("Boundary Fill",this);
+    boundary_fill_rec(points[n-1],colorPalette["purple"],colorPalette["red"]);
+    t.measureTime();
 }
 
 
@@ -1047,4 +892,13 @@ void MainWindow::on_zoomIn_clicked()
     draw_gridlines(unitDistance);
     recolor_screen();
 }
+
+
+
+
+
+
+
+
+
 

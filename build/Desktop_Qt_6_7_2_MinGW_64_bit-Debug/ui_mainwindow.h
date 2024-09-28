@@ -11,6 +11,7 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
@@ -37,11 +38,9 @@ public:
     QVBoxLayout *verticalLayout;
     QLabel *radiuslabel;
     QDoubleSpinBox *Radius;
-    QLabel *PolarTime;
+    QPushButton *GenMidPtCircle;
     QPushButton *GenCirclePolar;
-    QLabel *BresenhamCircleTime;
-    QPushButton *GenCircle;
-    QLabel *CartTime;
+    QPushButton *GenBresenhamCircle;
     QPushButton *GenCartCircle;
     QGroupBox *groupBox_2;
     QWidget *layoutWidget1;
@@ -70,7 +69,7 @@ public:
     QPushButton *reset;
     QWidget *layoutWidget4;
     QHBoxLayout *horizontalLayout_3;
-    QPushButton *pushButton_2;
+    QPushButton *BresenhamLineDraw;
     QLabel *DDA_TIME;
     QPushButton *DDADraw;
     QLabel *Bresenham_Time;
@@ -85,6 +84,8 @@ public:
     QPushButton *zoomIn;
     QLCDNumber *timetaken;
     QLabel *TimeMessage;
+    QLabel *label_7;
+    QCheckBox *ThickEdges;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -101,7 +102,7 @@ public:
         workArea->setFrameShape(QFrame::Shape::Box);
         groupBox = new QGroupBox(centralwidget);
         groupBox->setObjectName("groupBox");
-        groupBox->setGeometry(QRect(760, 150, 251, 291));
+        groupBox->setGeometry(QRect(770, 160, 251, 291));
         layoutWidget = new QWidget(groupBox);
         layoutWidget->setObjectName("layoutWidget");
         layoutWidget->setGeometry(QRect(10, 29, 231, 251));
@@ -121,30 +122,20 @@ public:
 
         verticalLayout->addWidget(Radius);
 
-        PolarTime = new QLabel(layoutWidget);
-        PolarTime->setObjectName("PolarTime");
+        GenMidPtCircle = new QPushButton(layoutWidget);
+        GenMidPtCircle->setObjectName("GenMidPtCircle");
 
-        verticalLayout->addWidget(PolarTime);
+        verticalLayout->addWidget(GenMidPtCircle);
 
         GenCirclePolar = new QPushButton(layoutWidget);
         GenCirclePolar->setObjectName("GenCirclePolar");
 
         verticalLayout->addWidget(GenCirclePolar);
 
-        BresenhamCircleTime = new QLabel(layoutWidget);
-        BresenhamCircleTime->setObjectName("BresenhamCircleTime");
+        GenBresenhamCircle = new QPushButton(layoutWidget);
+        GenBresenhamCircle->setObjectName("GenBresenhamCircle");
 
-        verticalLayout->addWidget(BresenhamCircleTime);
-
-        GenCircle = new QPushButton(layoutWidget);
-        GenCircle->setObjectName("GenCircle");
-
-        verticalLayout->addWidget(GenCircle);
-
-        CartTime = new QLabel(layoutWidget);
-        CartTime->setObjectName("CartTime");
-
-        verticalLayout->addWidget(CartTime);
+        verticalLayout->addWidget(GenBresenhamCircle);
 
         GenCartCircle = new QPushButton(layoutWidget);
         GenCartCircle->setObjectName("GenCartCircle");
@@ -282,10 +273,10 @@ public:
         horizontalLayout_3 = new QHBoxLayout(layoutWidget4);
         horizontalLayout_3->setObjectName("horizontalLayout_3");
         horizontalLayout_3->setContentsMargins(0, 0, 0, 0);
-        pushButton_2 = new QPushButton(layoutWidget4);
-        pushButton_2->setObjectName("pushButton_2");
+        BresenhamLineDraw = new QPushButton(layoutWidget4);
+        BresenhamLineDraw->setObjectName("BresenhamLineDraw");
 
-        horizontalLayout_3->addWidget(pushButton_2);
+        horizontalLayout_3->addWidget(BresenhamLineDraw);
 
         DDA_TIME = new QLabel(layoutWidget4);
         DDA_TIME->setObjectName("DDA_TIME");
@@ -335,14 +326,21 @@ public:
         zoomIn->setGeometry(QRect(1090, 500, 93, 29));
         timetaken = new QLCDNumber(centralwidget);
         timetaken->setObjectName("timetaken");
-        timetaken->setGeometry(QRect(1090, 540, 121, 41));
+        timetaken->setGeometry(QRect(970, 610, 191, 41));
         TimeMessage = new QLabel(centralwidget);
         TimeMessage->setObjectName("TimeMessage");
-        TimeMessage->setGeometry(QRect(770, 610, 631, 51));
+        TimeMessage->setGeometry(QRect(770, 660, 591, 31));
         QFont font3;
-        font3.setFamilies({QString::fromUtf8("Algerian")});
-        font3.setPointSize(11);
+        font3.setFamilies({QString::fromUtf8("Segoe UI Black")});
+        font3.setPointSize(9);
+        font3.setBold(true);
         TimeMessage->setFont(font3);
+        label_7 = new QLabel(centralwidget);
+        label_7->setObjectName("label_7");
+        label_7->setGeometry(QRect(770, 610, 191, 41));
+        ThickEdges = new QCheckBox(centralwidget);
+        ThickEdges->setObjectName("ThickEdges");
+        ThickEdges->setGeometry(QRect(910, 490, 111, 24));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -363,11 +361,9 @@ public:
         workArea->setText(QString());
         groupBox->setTitle(QCoreApplication::translate("MainWindow", "CIRCLE", nullptr));
         radiuslabel->setText(QCoreApplication::translate("MainWindow", "Radius", nullptr));
-        PolarTime->setText(QString());
+        GenMidPtCircle->setText(QCoreApplication::translate("MainWindow", "Generate Circle MidPoint", nullptr));
         GenCirclePolar->setText(QCoreApplication::translate("MainWindow", "Generate Circle Polar", nullptr));
-        BresenhamCircleTime->setText(QString());
-        GenCircle->setText(QCoreApplication::translate("MainWindow", "Generate Circle Bresenham", nullptr));
-        CartTime->setText(QString());
+        GenBresenhamCircle->setText(QCoreApplication::translate("MainWindow", "Generate Circle Bresenham", nullptr));
         GenCartCircle->setText(QCoreApplication::translate("MainWindow", "Generate Cartesian Circle", nullptr));
         groupBox_2->setTitle(QCoreApplication::translate("MainWindow", "Ellipse", nullptr));
         label_5->setText(QCoreApplication::translate("MainWindow", "Semi Minor Axis", nullptr));
@@ -384,7 +380,7 @@ public:
         y_coordinate->setText(QString());
         store->setText(QCoreApplication::translate("MainWindow", "Store Canvas", nullptr));
         reset->setText(QCoreApplication::translate("MainWindow", "Erase Canvas", nullptr));
-        pushButton_2->setText(QCoreApplication::translate("MainWindow", "Generate Bresenham Line", nullptr));
+        BresenhamLineDraw->setText(QCoreApplication::translate("MainWindow", "Generate Bresenham Line", nullptr));
         DDA_TIME->setText(QString());
         DDADraw->setText(QCoreApplication::translate("MainWindow", "Generate DDA Line", nullptr));
         Bresenham_Time->setText(QString());
@@ -397,6 +393,8 @@ public:
         zoomOut->setText(QCoreApplication::translate("MainWindow", "Zoom Out", nullptr));
         zoomIn->setText(QCoreApplication::translate("MainWindow", "Zoom In", nullptr));
         TimeMessage->setText(QString());
+        label_7->setText(QCoreApplication::translate("MainWindow", "Time taken in nanoseconds:", nullptr));
+        ThickEdges->setText(QCoreApplication::translate("MainWindow", "Thick Edges", nullptr));
     } // retranslateUi
 
 };
