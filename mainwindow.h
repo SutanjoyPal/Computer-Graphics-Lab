@@ -128,6 +128,7 @@ private:
     void initializeColorPalette();
 
     class myTimer;
+    void matrix_multiplication(QVector<int> &transformationMatrix);
 };
 #endif // MAINWINDOW_H
 
