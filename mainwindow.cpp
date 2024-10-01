@@ -867,38 +867,81 @@ void MainWindow::on_boundaryFill_clicked()
 
 
 void MainWindow::recolor_screen(){
-    for(auto i:colorMap.keys()){
-        QColor p = colorMap[i];
-        QPoint coord = QPoint(i.first,i.second);
-        QPoint pt = point_transform(coord.x(),coord.y());
-        colorPoint(pt.x(),pt.y(),p.red(),p.green(),p.blue(),unitDistance);
+    for (auto it = colorMap.cbegin(); it != colorMap.cend(); ++it) {
+        QPoint coord(it.key().first, it.key().second);
+        colorPoint(coord, it.value());
     }
 }
 
 
 void MainWindow::on_zoomOut_clicked()
 {
-    clear_screen();
+
     unitDistance += 10;
-    draw_gridlines(unitDistance);
-    recolor_screen();
+    redraw_screen();
 }
 
 
 void MainWindow::on_zoomIn_clicked()
 {
-    clear_screen();
     if(unitDistance > 10) unitDistance -= 10;
+    redraw_screen();
+}
+
+QVector<int> MainWindow::matrix_multiplication(QVector<QVector<float>> &transformationMatrix,QVector<int> &coordinates){
+    QVector<int> transformed_coordinates(3);
+    for(int i=0;i<3;++i){
+        transformed_coordinates[i] = std::round(transformationMatrix[i][0]*(coordinates[0]*1.0)+
+                                     transformationMatrix[i][1]*(coordinates[1]*1.0)+
+                                     transformationMatrix[i][2]*(coordinates[2]*1.0));
+    }
+    return transformed_coordinates;
+}
+
+void MainWindow::redraw_screen(){
+    clear_screen();
     draw_gridlines(unitDistance);
     recolor_screen();
+}
+
+void MainWindow::coordinate_transformation(QVector<QVector<float>> &transformationMatrix){
+    QMap<QPair<int,int>,QColor> transformedColorMap;
+    for (auto it = colorMap.cbegin(); it != colorMap.cend(); ++it) {
+        QVector<int> coordinates(3);
+        coordinates[0]=it.key().first;
+        coordinates[1]=it.key().second;
+        coordinates[2]=1;
+        QVector<int> transformed_coordinates = matrix_multiplication(transformationMatrix,coordinates);
+        transformedColorMap[{transformed_coordinates[0],transformed_coordinates[1]}] = it.value();
+        //qDebug()<<"Old: "<<coordinates[0]<<" "<<coordinates[1];
+        //qDebug()<<"New: "<<transformed_coordinates[0]<<" "<<transformed_coordinates[1];
+    }
+    colorMap = transformedColorMap;
+    //qDebug()<<"Here";
+}
+
+void MainWindow::on_ReflectX_clicked()
+{
+    QVector<QVector<float>> transformationMatrix = {{1,0,0},{0,-1,0},{0,0,1}};
+    coordinate_transformation(transformationMatrix);
+    redraw_screen();
+}
+
+
+void MainWindow::on_ReflectY_clicked()
+{
+    QVector<QVector<float>> transformationMatrix = {{-1,0,0},{0,1,0},{0,0,1}};
+    coordinate_transformation(transformationMatrix);
+    redraw_screen();
 }
 
 
 
 
-
-
-
-
-
+void MainWindow::on_ReflectO_clicked()
+{
+    QVector<QVector<float>> transformationMatrix = {{-1,0,0},{0,-1,0},{0,0,1}};
+    coordinate_transformation(transformationMatrix);
+    redraw_screen();
+}
 

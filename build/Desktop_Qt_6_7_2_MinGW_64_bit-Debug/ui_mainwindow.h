@@ -86,6 +86,9 @@ public:
     QLabel *TimeMessage;
     QLabel *label_7;
     QCheckBox *ThickEdges;
+    QPushButton *ReflectX;
+    QPushButton *ReflectY;
+    QPushButton *ReflectO;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -320,10 +323,10 @@ public:
         boundaryFill->setGeometry(QRect(770, 570, 131, 29));
         zoomOut = new QPushButton(centralwidget);
         zoomOut->setObjectName("zoomOut");
-        zoomOut->setGeometry(QRect(1090, 450, 93, 29));
+        zoomOut->setGeometry(QRect(1030, 450, 93, 29));
         zoomIn = new QPushButton(centralwidget);
         zoomIn->setObjectName("zoomIn");
-        zoomIn->setGeometry(QRect(1090, 500, 93, 29));
+        zoomIn->setGeometry(QRect(1030, 490, 93, 29));
         timetaken = new QLCDNumber(centralwidget);
         timetaken->setObjectName("timetaken");
         timetaken->setGeometry(QRect(970, 610, 191, 41));
@@ -341,6 +344,15 @@ public:
         ThickEdges = new QCheckBox(centralwidget);
         ThickEdges->setObjectName("ThickEdges");
         ThickEdges->setGeometry(QRect(910, 490, 111, 24));
+        ReflectX = new QPushButton(centralwidget);
+        ReflectX->setObjectName("ReflectX");
+        ReflectX->setGeometry(QRect(1140, 450, 141, 29));
+        ReflectY = new QPushButton(centralwidget);
+        ReflectY->setObjectName("ReflectY");
+        ReflectY->setGeometry(QRect(1140, 490, 131, 29));
+        ReflectO = new QPushButton(centralwidget);
+        ReflectO->setObjectName("ReflectO");
+        ReflectO->setGeometry(QRect(1140, 530, 141, 29));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -395,6 +407,9 @@ public:
         TimeMessage->setText(QString());
         label_7->setText(QCoreApplication::translate("MainWindow", "Time taken in nanoseconds:", nullptr));
         ThickEdges->setText(QCoreApplication::translate("MainWindow", "Thick Edges", nullptr));
+        ReflectX->setText(QCoreApplication::translate("MainWindow", "Reflect w.r.t. x-axis", nullptr));
+        ReflectY->setText(QCoreApplication::translate("MainWindow", "Reflect w.r.t y-axis", nullptr));
+        ReflectO->setText(QCoreApplication::translate("MainWindow", "Reflect w.r.t origin", nullptr));
     } // retranslateUi
 
 };

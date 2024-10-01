@@ -60,6 +60,12 @@ private slots:
 
     void on_GenMidPtCircle_clicked();
 
+    void on_ReflectX_clicked();
+
+    void on_ReflectY_clicked();
+
+    void on_ReflectO_clicked();
+
 private:
     Ui::MainWindow *ui;
     QPixmap temp;
@@ -128,7 +134,10 @@ private:
     void initializeColorPalette();
 
     class myTimer;
-    void matrix_multiplication(QVector<int> &transformationMatrix);
+    QVector<int> matrix_multiplication(QVector<QVector<float>> &transformationMatrix,QVector<int> &coordinates);
+    void coordinate_transformation(QVector<QVector<float>> &transformationMatrix);
+
+    void redraw_screen();
 };
 #endif // MAINWINDOW_H
 

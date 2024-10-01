@@ -446,7 +446,7 @@
    <widget class="QPushButton" name="zoomOut">
     <property name="geometry">
      <rect>
-      <x>1090</x>
+      <x>1030</x>
       <y>450</y>
       <width>93</width>
       <height>29</height>
@@ -459,8 +459,8 @@
    <widget class="QPushButton" name="zoomIn">
     <property name="geometry">
      <rect>
-      <x>1090</x>
-      <y>500</y>
+      <x>1030</x>
+      <y>490</y>
       <width>93</width>
       <height>29</height>
      </rect>
@@ -523,6 +523,45 @@
     </property>
     <property name="text">
      <string>Thick Edges</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ReflectX">
+    <property name="geometry">
+     <rect>
+      <x>1140</x>
+      <y>450</y>
+      <width>141</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reflect w.r.t. x-axis</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ReflectY">
+    <property name="geometry">
+     <rect>
+      <x>1140</x>
+      <y>490</y>
+      <width>131</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reflect w.r.t y-axis</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ReflectO">
+    <property name="geometry">
+     <rect>
+      <x>1140</x>
+      <y>530</y>
+      <width>141</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reflect w.r.t origin</string>
     </property>
    </widget>
   </widget>
