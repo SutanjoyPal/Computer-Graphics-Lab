@@ -291,6 +291,9 @@ void MainWindow::on_DDADraw_clicked()
     if(points.size()< 2 ) return;
     qint64 n  = points.size();
     QVector<QPoint> linePts = generate_dda_linePts(points[n-2],points[n-1]);
+    start=points[n-2];
+    end=points[n-1];
+    line = linePts;
     color_pts(linePts,colorPalette["pink"]);
 }
 
@@ -340,6 +343,9 @@ void MainWindow::on_BresenhamLineDraw_clicked()
     if(points.size()< 2 ) return;
     qint64 n  = points.size();
     QVector<QPoint> linePts = generate_bresenham_linePts(points[n-2],points[n-1]);
+    start=points[n-2];
+    end=points[n-1];
+    line = linePts;
     color_pts(linePts,colorPalette["maroon"]);
 }
 
@@ -656,18 +662,18 @@ void MainWindow::on_GenEllipseBre_clicked()
 }
 
 
-QVector<QPoint> MainWindow::get_Vertices(){
+void MainWindow::get_Vertices(){
     int vertexCount = ui->polygonSideCount->value();
     //if(vertexCount < 3) throw "Polygon Not possible";
     //if(vertexCount < points.size()) throw "Insufficient Points";
     qint64 lastIndex = points.size()-1;
     qint64 currentIndex = lastIndex;
-    QVector<QPoint> polygonVertices;
+    //QVector<QPoint> polygonVertices;
     while(vertexCount--){
         polygonVertices.push_back(points[currentIndex]);
         currentIndex--;
     }
-    return polygonVertices;
+    //return polygonVertices;
 }
 
 void MainWindow::draw_Polgon_Sides(QVector<QPoint> &polygonVertices){
@@ -698,7 +704,8 @@ void MainWindow::make_edges_thicker(){
 
 void MainWindow::draw_Polygon(){
     polygon.clear();
-    QVector<QPoint> polygonVertices = get_Vertices();
+    polygonVertices.clear();
+    get_Vertices();
     draw_Polgon_Sides(polygonVertices);
 }
 
@@ -904,35 +911,56 @@ void MainWindow::redraw_screen(){
     recolor_screen();
 }
 
-void MainWindow::coordinate_transformation(QVector<QVector<float>> &transformationMatrix){
-    QMap<QPair<int,int>,QColor> transformedColorMap;
-    for (auto it = colorMap.cbegin(); it != colorMap.cend(); ++it) {
+void MainWindow::draw_transfromed_polygon(QVector<QPair<int,int>> &transformedVertices){
+    for(QPoint vertex:polygon){
+        auto it = colorMap.find({vertex.x(),vertex.y()});
+        if(it!=colorMap.end()) colorMap.erase(it);
+    }
+    redraw_screen();
+
+    polygon.clear();
+
+    draw_Polgon_Sides(polygonVertices);
+    color_pts(polygon,colorPalette["purple"]);
+}
+
+QVector<QPair<int,int>> MainWindow::coordinate_transformation(QVector<QVector<float>> &transformationMatrix){
+
+    myTimer t("Transformation",this);
+    QVector<QPair<int,int>> transformedVertices;
+    for(QPoint vertex:polygonVertices){
         QVector<int> coordinates(3);
-        coordinates[0]=it.key().first;
-        coordinates[1]=it.key().second;
+        coordinates[0]=vertex.x();
+        coordinates[1]=vertex.y();
         coordinates[2]=1;
         QVector<int> transformed_coordinates = matrix_multiplication(transformationMatrix,coordinates);
-        transformedColorMap[{transformed_coordinates[0],transformed_coordinates[1]}] = it.value();
-        //qDebug()<<"Old: "<<coordinates[0]<<" "<<coordinates[1];
-        //qDebug()<<"New: "<<transformed_coordinates[0]<<" "<<transformed_coordinates[1];
+        transformedVertices.push_back({transformed_coordinates[0],transformed_coordinates[1]});
     }
-    colorMap = transformedColorMap;
+
+    polygonVertices.clear();
+    for(QPair<int,int> p:transformedVertices){
+        polygonVertices.push_back(QPoint{p.first,p.second});
+    }
+
+    t.measureTime();
+    return transformedVertices;
+    //colorMap = transformedColorMap;
     //qDebug()<<"Here";
 }
 
 void MainWindow::on_ReflectX_clicked()
 {
     QVector<QVector<float>> transformationMatrix = {{1,0,0},{0,-1,0},{0,0,1}};
-    coordinate_transformation(transformationMatrix);
-    redraw_screen();
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
 }
 
 
 void MainWindow::on_ReflectY_clicked()
 {
     QVector<QVector<float>> transformationMatrix = {{-1,0,0},{0,1,0},{0,0,1}};
-    coordinate_transformation(transformationMatrix);
-    redraw_screen();
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
 }
 
 
@@ -941,7 +969,241 @@ void MainWindow::on_ReflectY_clicked()
 void MainWindow::on_ReflectO_clicked()
 {
     QVector<QVector<float>> transformationMatrix = {{-1,0,0},{0,-1,0},{0,0,1}};
-    coordinate_transformation(transformationMatrix);
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
+}
+
+
+void MainWindow::on_translate_clicked()
+{
+    float x=ui->translateX->value();
+    float y=ui->translateY->value();
+    QVector<QVector<float>> transformationMatrix = {{1,0,x},{0,1,y},{0,0,1}};
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
+}
+
+
+void MainWindow::on_rotateOrigin_clicked()
+{
+    float angle = ui->rotateAngle->value();
+    angle = angle*M_PI / 180.0;
+    float cosine = cos(angle),sine = sin(angle);
+    QVector<QVector<float>> transformationMatrix = {{cosine,sine,0},{-sine,cosine,0},{0,0,1}};
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
+}
+
+
+void MainWindow::on_shear_clicked()
+{
+    float shx=ui->shearX->value();
+    float shy=ui->shearY->value();
+    QVector<QVector<float>> transformationMatrix = {{1,shx,0},{shy,1,0},{0,0,1}};
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
+}
+
+
+void MainWindow::on_Scale_clicked()
+{
+    float height=ui->translateX->value();
+    float width=ui->translateY->value();
+    QVector<QVector<float>> transformationMatrix = {{width,0,0},{0,height,0},{0,0,1}};
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
+}
+
+
+void MainWindow::on_Rotate_clicked()
+{
+    int n = points.size();
+    float x = points[n-1].x(),y = points[n-1].y();
+    QVector<QVector<float>> transformationMatrix = {{1,0,-x},{0,1,-y},{0,0,1}};
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+
+    float angle = ui->rotateAngle->value();
+    angle = angle*M_PI / 180.0;
+    float cosine = cos(angle),sine = sin(angle);
+    transformationMatrix = {{cosine,sine,0},{-sine,cosine,0},{0,0,1}};
+    transformedVertices = coordinate_transformation(transformationMatrix);
+
+    transformationMatrix = {{1,0,x},{0,1,y},{0,0,1}};
+    transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
+}
+
+
+void MainWindow::on_scale_clicked()
+{
+    int n = points.size();
+    float x = points[n-1].x(),y = points[n-1].y();
+    QVector<QVector<float>> transformationMatrix = {{1,0,-x},{0,1,-y},{0,0,1}};
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+
+    float height=ui->translateX->value();
+    float width=ui->translateY->value();
+    transformationMatrix = {{width,0,0},{0,height,0},{0,0,1}};
+    transformedVertices = coordinate_transformation(transformationMatrix);
+
+
+    transformationMatrix = {{1,0,x},{0,1,y},{0,0,1}};
+    transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
+}
+
+
+void MainWindow::on_Reflect_clicked()
+{
+    int n = points.size();
+    float m = calc_slope(points[n-1],points[n-2]);
+    float c = points[n-1].y() - m*points[n-1].x();
+    float angle;
+    if(m==std::numeric_limits<float>::max()){
+        angle = M_PI;
+    }
+    else{
+        angle = 2*(std::atan(m));
+    }
+    float cosine = cos(angle),sine = sin(angle);
+    QVector<QVector<float>> transformationMatrix = {{cosine,sine,0},{sine,-cosine,0},{-c*sine,c+c*cosine,1}};
+    QVector<QPair<int,int>> transformedVertices = coordinate_transformation(transformationMatrix);
+    draw_transfromed_polygon(transformedVertices);
+}
+
+void MainWindow::genRectangle(QPoint mn,QPoint mx){
+    polygonVertices = {QPoint(mn.x(),mn.y()),QPoint(mn.x(),mx.y()),QPoint(mx.x(),mx.y()),QPoint(mx.x(),mn.y())};
+    draw_Polgon_Sides(polygonVertices);
+    color_pts(polygon,colorPalette["blue"]);
+}
+
+int xmin;
+int xmax;
+int ymin;
+int ymax;
+
+void MainWindow::on_Window_clicked()
+{
+    int n=points.size();
+    xmin = fmin(points[n-1].x(),points[n-2].x());
+    xmax = fmax(points[n-1].x(),points[n-2].x());
+    ymin = fmin(points[n-1].y(),points[n-2].y());
+    ymax = fmax(points[n-1].y(),points[n-2].y());
+    genRectangle(QPoint(xmin,ymin),QPoint(xmax,ymax));
+}
+
+int MainWindow::genCode(QPoint endPt){
+    //0000 => inside
+    int left = 1;//0001
+    int right = 2;//0010
+    int bottom = 4;//0100
+    int top = 8;//1000
+
+    int code = 0;
+    if(endPt.x() < xmin){
+        code|=left;
+    }
+    else if(endPt.x() > xmax){
+        code|=right;
+    }
+    else if(endPt.y() < ymin){
+        code|=bottom;
+    }
+    else if(endPt.y() > ymax){
+        code|=top;
+    }
+
+    return code;
+}
+
+
+void MainWindow::on_SutherCohen_clicked()
+{
+    int startPtcode = genCode(start);
+    int endPtcode = genCode(end);
+
+    int orOfCodes = startPtcode|endPtcode;
+    if(orOfCodes == 0){
+        //qDebug()<<"Line is completely inside window";
+        ui->ClipMsg->setText("Line is completely inside window");
+    }
+    else if(startPtcode == endPtcode){
+        //qDebug()<<"Line is completely outside window";
+        ui->ClipMsg->setText("Line is completely outside window");
+    }
+    else{
+        QVector<QPoint> clippedPts;
+        for(QPoint pt:line){
+            if((pt.x() >= xmax)||(pt.x() <= xmin)||(pt.y() >= ymax)||(pt.y() <= ymin)) continue;
+            clippedPts.push_back(pt);
+        }
+        QColor lineColor = colorMap[{start.x(),start.y()}];
+        for(QPoint pt:line){
+            QColor clr = colorMap[{pt.x(),pt.y()}];
+            auto it = colorMap.find({pt.x(),pt.y()});
+            if((it!=colorMap.end()) && (clr==lineColor)) colorMap.erase(it);
+        }
+        redraw_screen();
+        color_pts(clippedPts,lineColor);
+        ui->ClipMsg->setText("Line Clipped");
+    }
+}
+
+
+
+
+
+void MainWindow::on_LiangBarsky_clicked()
+{
+    QVector<int> p(4),q(4);
+    p[0] = -(end.x() - start.x());
+    p[1] = end.x() - start.x();
+    p[2] = -(end.y() - start.y());
+    p[3] = end.y() - start.y();
+
+    q[0] = start.x() - xmin;
+    q[1] = xmax - start.x();
+    q[2] = start.y() - ymin;
+    q[3] = ymax-start.y();
+
+    float t1=0,t2=1;
+    for(int i=0;i<4;++i){
+        if(p[i]==0){
+            if(q[i]<0){
+                ui->ClipMsg->setText("Line is parallel to boundary and outside window");
+            }
+            else{
+                ui->ClipMsg->setText("Line is parallel to boundary");
+            }
+            return;
+        }
+        else if(p[i] < 0){
+            t1 = fmax(t1,q[i]/(p[i]*1.0));
+        }
+        else{
+            t2 = fmin(t2,q[i]/(p[i]*1.0));
+        }
+
+    }
+    QPoint newStart = QPoint(start.x() + t1*(end.x()-start.x()),start.y() + t1*(end.y()-start.y()));
+    QPoint newEnd = QPoint(start.x() + t2*(end.x()-start.x()),start.y() + t2*(end.y()-start.y()));
+    QColor lineColor = colorMap[{start.x(),start.y()}];
+
+    for(QPoint pt:line){
+        QColor clr = colorMap[{pt.x(),pt.y()}];
+        auto it = colorMap.find({pt.x(),pt.y()});
+        if((it!=colorMap.end()) && (clr==lineColor)) colorMap.erase(it);
+    }
     redraw_screen();
+    if(lineColor == colorPalette["pink"]){
+        line = generate_dda_linePts(newStart,newEnd);
+    }
+    else{
+        line = generate_bresenham_linePts(newStart,newEnd);
+    }
+    start = newStart;
+    end = newEnd;
+    color_pts(line,lineColor);
+    ui->ClipMsg->setText("Line Clipped");
 }
 

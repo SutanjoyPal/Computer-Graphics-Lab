@@ -66,6 +66,26 @@ private slots:
 
     void on_ReflectO_clicked();
 
+    void on_translate_clicked();
+
+    void on_rotateOrigin_clicked();
+
+    void on_shear_clicked();
+
+    void on_Scale_clicked();
+
+    void on_Rotate_clicked();
+
+    void on_scale_clicked();
+
+    void on_Reflect_clicked();
+
+    void on_SutherCohen_clicked();
+
+    void on_Window_clicked();
+
+    void on_LiangBarsky_clicked();
+
 private:
     Ui::MainWindow *ui;
     QPixmap temp;
@@ -96,7 +116,7 @@ private:
 
     void draw_Polygon();
     void draw_Polgon_Sides(QVector<QPoint> &polygonVertices);
-    QVector<QPoint> get_Vertices();
+    void get_Vertices();
     void make_edges_thicker();
 
     QColor getGridSquareColor(int gridX, int gridY);
@@ -119,11 +139,17 @@ private:
     void flood_fill_rec(QPoint seed,QColor oldColor,QColor newColor);
 
     void recolor_screen();
+    void genRectangle(QPoint mn,QPoint mx);
+    int genCode(QPoint endPt);
+
 
     QMap<QString,QColor> colorPalette;
     QPoint clickedPoint;
     QVector<QPoint> points;
     QSet<QPoint> polygon;
+    QPoint start,end;
+    QVector<QPoint> line;
+    QVector<QPoint> polygonVertices;
     QMap<QPair<int,int>,QColor> colorMap;
     int unitDistance;
     int width;
@@ -135,9 +161,11 @@ private:
 
     class myTimer;
     QVector<int> matrix_multiplication(QVector<QVector<float>> &transformationMatrix,QVector<int> &coordinates);
-    void coordinate_transformation(QVector<QVector<float>> &transformationMatrix);
-
+    QVector<QPair<int,int>> coordinate_transformation(QVector<QVector<float>> &transformationMatrix);
+    void draw_transfromed_polygon(QVector<QPair<int,int>> &transformedVertices);
     void redraw_screen();
+
+
 };
 #endif // MAINWINDOW_H
 

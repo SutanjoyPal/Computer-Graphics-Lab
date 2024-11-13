@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1411</width>
-    <height>1079</height>
+    <width>1499</width>
+    <height>1076</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -528,7 +528,7 @@
    <widget class="QPushButton" name="ReflectX">
     <property name="geometry">
      <rect>
-      <x>1140</x>
+      <x>1130</x>
       <y>450</y>
       <width>141</width>
       <height>29</height>
@@ -554,8 +554,8 @@
    <widget class="QPushButton" name="ReflectO">
     <property name="geometry">
      <rect>
-      <x>1140</x>
-      <y>530</y>
+      <x>1270</x>
+      <y>450</y>
       <width>141</width>
       <height>29</height>
      </rect>
@@ -564,13 +564,236 @@
      <string>Reflect w.r.t origin</string>
     </property>
    </widget>
+   <widget class="QSpinBox" name="translateX">
+    <property name="geometry">
+     <rect>
+      <x>1030</x>
+      <y>530</y>
+      <width>31</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>-1000000</number>
+    </property>
+    <property name="maximum">
+     <number>1000000</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="translateY">
+    <property name="geometry">
+     <rect>
+      <x>1110</x>
+      <y>530</y>
+      <width>31</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>-1000000</number>
+    </property>
+    <property name="maximum">
+     <number>1000000</number>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="translate">
+    <property name="geometry">
+     <rect>
+      <x>1192</x>
+      <y>530</y>
+      <width>81</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Translate</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="rotateAngle">
+    <property name="geometry">
+     <rect>
+      <x>1030</x>
+      <y>570</y>
+      <width>62</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <double>-1000000.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>1000000.000000000000000</double>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="rotateOrigin">
+    <property name="geometry">
+     <rect>
+      <x>1130</x>
+      <y>570</y>
+      <width>141</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rotate w.r.t origin</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="shear">
+    <property name="geometry">
+     <rect>
+      <x>1280</x>
+      <y>530</y>
+      <width>93</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Shear</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Scale">
+    <property name="geometry">
+     <rect>
+      <x>1300</x>
+      <y>570</y>
+      <width>151</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Scale w.r.t. origin</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="shearX">
+    <property name="geometry">
+     <rect>
+      <x>1280</x>
+      <y>500</y>
+      <width>62</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <double>-1000000.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>1000000.000000000000000</double>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="shearY">
+    <property name="geometry">
+     <rect>
+      <x>1390</x>
+      <y>500</y>
+      <width>62</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <double>-1000000.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>1000000.000000000000000</double>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Rotate">
+    <property name="geometry">
+     <rect>
+      <x>1180</x>
+      <y>610</y>
+      <width>93</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rotate </string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="scale">
+    <property name="geometry">
+     <rect>
+      <x>1300</x>
+      <y>610</y>
+      <width>93</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Scale</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Reflect">
+    <property name="geometry">
+     <rect>
+      <x>1180</x>
+      <y>660</y>
+      <width>93</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reflect</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="SutherCohen">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>730</y>
+      <width>93</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>SC Line Clip</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Window">
+    <property name="geometry">
+     <rect>
+      <x>770</x>
+      <y>730</y>
+      <width>93</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Window</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="LiangBarsky">
+    <property name="geometry">
+     <rect>
+      <x>1000</x>
+      <y>730</y>
+      <width>93</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LB Line Clip</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="ClipMsg">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>670</y>
+      <width>401</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1411</width>
+     <width>1499</width>
      <height>26</height>
     </rect>
    </property>
