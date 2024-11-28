@@ -787,6 +787,19 @@
      <string/>
     </property>
    </widget>
+   <widget class="QPushButton" name="SutherLandhodgeMan">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>730</y>
+      <width>121</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>SH Polgon Clip</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

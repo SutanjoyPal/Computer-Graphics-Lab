@@ -105,6 +105,7 @@ public:
     QPushButton *Window;
     QPushButton *LiangBarsky;
     QLabel *ClipMsg;
+    QPushButton *SutherLandhodgeMan;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -427,6 +428,9 @@ public:
         ClipMsg = new QLabel(centralwidget);
         ClipMsg->setObjectName("ClipMsg");
         ClipMsg->setGeometry(QRect(20, 670, 401, 41));
+        SutherLandhodgeMan = new QPushButton(centralwidget);
+        SutherLandhodgeMan->setObjectName("SutherLandhodgeMan");
+        SutherLandhodgeMan->setGeometry(QRect(600, 730, 121, 29));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -495,6 +499,7 @@ public:
         Window->setText(QCoreApplication::translate("MainWindow", "Window", nullptr));
         LiangBarsky->setText(QCoreApplication::translate("MainWindow", "LB Line Clip", nullptr));
         ClipMsg->setText(QString());
+        SutherLandhodgeMan->setText(QCoreApplication::translate("MainWindow", "SH Polgon Clip", nullptr));
     } // retranslateUi
 
 };

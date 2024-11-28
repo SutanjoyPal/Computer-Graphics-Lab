@@ -86,6 +86,8 @@ private slots:
 
     void on_LiangBarsky_clicked();
 
+    void on_SutherLandhodgeMan_clicked();
+
 private:
     Ui::MainWindow *ui;
     QPixmap temp;
@@ -141,6 +143,8 @@ private:
     void recolor_screen();
     void genRectangle(QPoint mn,QPoint mx);
     int genCode(QPoint endPt);
+
+    QPoint get_intersection_point(QPoint a,QPoint b,int t,bool f);
 
 
     QMap<QString,QColor> colorPalette;

@@ -1072,9 +1072,14 @@ void MainWindow::on_Reflect_clicked()
 }
 
 void MainWindow::genRectangle(QPoint mn,QPoint mx){
+    QSet<QPoint> tempPolygon=polygon;
+    QVector<QPoint> tempPolygonVertices=polygonVertices;
+    polygon.clear();
     polygonVertices = {QPoint(mn.x(),mn.y()),QPoint(mn.x(),mx.y()),QPoint(mx.x(),mx.y()),QPoint(mx.x(),mn.y())};
     draw_Polgon_Sides(polygonVertices);
     color_pts(polygon,colorPalette["blue"]);
+    polygonVertices = tempPolygonVertices;
+    polygon = tempPolygon;
 }
 
 int xmin;
@@ -1145,6 +1150,7 @@ void MainWindow::on_SutherCohen_clicked()
         }
         redraw_screen();
         color_pts(clippedPts,lineColor);
+        //genRectangle(QPoint(xmin,ymin),QPoint(xmax,ymax));
         ui->ClipMsg->setText("Line Clipped");
     }
 }
@@ -1204,6 +1210,135 @@ void MainWindow::on_LiangBarsky_clicked()
     start = newStart;
     end = newEnd;
     color_pts(line,lineColor);
+    //genRectangle(QPoint(xmin,ymin),QPoint(xmax,ymax));
     ui->ClipMsg->setText("Line Clipped");
+}
+
+QPoint MainWindow::get_intersection_point(QPoint a,QPoint b,int t,bool f){ //f==1 => x coord
+    QVector<QPoint> sidePts = generate_bresenham_linePts(a,b);
+    qDebug()<<t;
+    if(f){
+        for(auto pt:sidePts){
+            //qDebug()<<pt.x()<<" "<<pt.y();
+            if(pt.x()==t) {qDebug()<<"Intersection Point Found";return pt;}
+        }
+    }
+    else{
+        for(auto pt:sidePts){
+            //qDebug()<<pt.x()<<" "<<pt.y();
+            if(pt.y()==t) {qDebug()<<"Intersection Point Found";return pt;}
+        }
+    }
+    qDebug()<<"No intersection Point Found";
+    return QPoint(0,0);
+}
+
+
+
+
+
+void MainWindow::on_SutherLandhodgeMan_clicked()
+{
+    QVector<QPoint> clippedVertices = polygonVertices,newVertices;
+
+    qDebug()<<"Polgon Vertices"<<polygonVertices.size();
+    for(QPoint pt:clippedVertices){
+        qDebug()<<pt.x()<<" "<<pt.y();
+    }
+
+    //left
+    for(int i=0;i<clippedVertices.size();++i){
+        int j = (i+1)%(clippedVertices.size());
+
+        if((clippedVertices[i].x()<xmin)&&(clippedVertices[j].x()>=xmin)){
+            newVertices.push_back(get_intersection_point(clippedVertices[i],clippedVertices[j],xmin,1));
+            newVertices.push_back(clippedVertices[j]);
+        }
+        else if((clippedVertices[i].x()>=xmin)&&(clippedVertices[j].x()<xmin)){
+            newVertices.push_back(get_intersection_point(clippedVertices[i],clippedVertices[j],xmin,1));
+        }
+        else if((clippedVertices[i].x()>=xmin)&&(clippedVertices[j].x()>=xmin)){
+            newVertices.push_back(clippedVertices[j]);
+        }
+
+    }
+    clippedVertices = newVertices;
+    newVertices.clear();
+    qDebug()<<"Polgon Vertices"<<polygonVertices.size();
+    for(QPoint pt:clippedVertices){
+        qDebug()<<pt.x()<<" "<<pt.y();
+    }
+
+    //top
+    for(int i=0;i<clippedVertices.size();++i){
+        int j = (i+1)%(clippedVertices.size());
+
+        if((clippedVertices[i].y()>ymax)&&(clippedVertices[j].y()<=ymax)){
+            newVertices.push_back(get_intersection_point(clippedVertices[i],clippedVertices[j],ymax,0));
+            newVertices.push_back(clippedVertices[j]);
+        }
+        else if((clippedVertices[i].y()<=ymax)&&(clippedVertices[j].y()>ymax)){
+            newVertices.push_back(get_intersection_point(clippedVertices[i],clippedVertices[j],ymax,0));
+        }
+        else if((clippedVertices[i].y()<=ymax)&&(clippedVertices[j].y()<=ymax)){
+            newVertices.push_back(clippedVertices[j]);
+        }
+
+    }
+    clippedVertices = newVertices;
+    newVertices.clear();
+    qDebug()<<"Polgon Vertices"<<polygonVertices.size();
+    for(QPoint pt:clippedVertices){
+        qDebug()<<pt.x()<<" "<<pt.y();
+    }
+
+    //right
+    for(int i=0;i<clippedVertices.size();++i){
+        int j = (i+1)%(clippedVertices.size());
+
+        if((clippedVertices[i].x()>=xmax)&&(clippedVertices[j].x()<xmax)){
+            newVertices.push_back(get_intersection_point(clippedVertices[i],clippedVertices[j],xmax,1));
+            newVertices.push_back(clippedVertices[j]);
+        }
+        else if((clippedVertices[i].x()<xmax)&&(clippedVertices[j].x()>=xmax)){
+            newVertices.push_back(get_intersection_point(clippedVertices[i],clippedVertices[j],xmax,1));
+        }
+        else if((clippedVertices[i].x()<xmax)&&(clippedVertices[j].x()<xmax)){
+            newVertices.push_back(clippedVertices[j]);
+        }
+
+    }
+    clippedVertices = newVertices;
+    newVertices.clear();
+    qDebug()<<"Polgon Vertices"<<polygonVertices.size();
+    for(QPoint pt:clippedVertices){
+        qDebug()<<pt.x()<<" "<<pt.y();
+    }
+
+    //bottom
+    for(int i=0;i<clippedVertices.size();++i){
+        int j = (i+1)%(clippedVertices.size());
+
+        if((clippedVertices[i].y()<ymin)&&(clippedVertices[j].y()>=ymin)){
+            newVertices.push_back(get_intersection_point(clippedVertices[i],clippedVertices[j],ymin,0));
+            newVertices.push_back(clippedVertices[j]);
+        }
+        else if((clippedVertices[i].y()>=ymin)&&(clippedVertices[j].y()<ymin)){
+            newVertices.push_back(get_intersection_point(clippedVertices[i],clippedVertices[j],ymin,0));
+        }
+        else if((clippedVertices[i].y()>=ymin)&&(clippedVertices[j].y()>=ymin)){
+            newVertices.push_back(clippedVertices[j]);
+        }
+
+    }
+    clippedVertices = newVertices;
+    newVertices.clear();
+    qDebug()<<"Clipped Vertices Size"<<clippedVertices.size();
+    for(QPoint pt:clippedVertices){
+        qDebug()<<pt.x()<<" "<<pt.y();
+    }
+    QVector<QPair<int,int>> clippedVerticesPairs;
+    polygonVertices = clippedVertices;
+    draw_transfromed_polygon(clippedVerticesPairs);
 }
 
